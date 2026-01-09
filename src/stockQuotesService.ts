@@ -1,14 +1,18 @@
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 import type { StockQuoteInput, StockQuoteResponse } from './types.js';
 
 /**
  * Service for fetching stock quotes from Yahoo Finance
  */
 export class StockQuotesService {
+  private yahooFinance: any;
+
   /**
    * Create a new instance of the StockQuotesService
    */
-  constructor() {}
+  constructor() {
+    this.yahooFinance = new YahooFinance();
+  }
 
   /**
    * Fetch a stock quote for the given ticker symbol
@@ -20,9 +24,11 @@ export class StockQuotesService {
 
     try {
       // Fetch quote data from Yahoo Finance
-      const quote = await yahooFinance.quote(ticker, {
+      const quote = await this.yahooFinance.quote(
+        ticker /*, {
         fields: fields as never,
-      });
+      }*/
+      );
 
       // Transform the response to our interface
       const response: StockQuoteResponse = {
@@ -76,7 +82,7 @@ export class StockQuotesService {
    * @returns Promise<Map<string, StockQuoteResponse>> - Map of ticker to stock quote data
    */
   async getMultipleQuotes(tickers: string[]): Promise<Map<string, StockQuoteResponse>> {
-    const quotes = await yahooFinance.quote(tickers);
+    const quotes = await this.yahooFinance.quote(tickers);
     const result = new Map<string, StockQuoteResponse>();
 
     for (const ticker of tickers) {
@@ -95,7 +101,7 @@ export class StockQuotesService {
    * @returns Promise<Array<{symbol: string, name: string, exchange: string}>> - Search results
    */
   async search(query: string): Promise<Array<{ symbol: string; name: string; exchange: string }>> {
-    const results = await yahooFinance.search(query);
+    const results = await this.yahooFinance.search(query);
     // The search result has a quotes array with the actual results
     const quotes =
       (

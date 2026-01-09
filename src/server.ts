@@ -48,7 +48,7 @@ export class StockQuotesServer {
    */
   private registerTools(): void {
     this.server.registerTool(
-      'get_stock_quote',
+      `get_stock_quote_${process.pid}`,
       {
         title: 'Get Stock Quote',
         description:
@@ -61,17 +61,18 @@ export class StockQuotesServer {
             .min(1)
             .max(10)
             .describe('Stock ticker symbol (e.g., AAPL, GOOGL, MSFT)'),
-          fields: z
+          /* fields: z
             .array(z.string())
             .optional()
-            .describe('Optional list of specific fields to return'),
+            .describe('Optional list of specific fields to return'),*/
         },
         outputSchema: {
-          symbol: z.string(),
-          name: z.string().optional(),
-          exchange: z.string().optional(),
-          currency: z.string().optional(),
-          regularMarketPrice: z.number().optional(),
+          symbol: z.string().describe('Stock ticker symbol'),
+          name: z.string().optional().describe('Full name of the company or instrument'),
+          currency: z.string().optional().describe('Currency of the stock price'),
+          exchange: z.string().optional().describe('Exchange where the stock is listed'),
+          price: z.number().optional().describe('Current market price'),
+          /*,
           regularMarketChange: z.number().optional(),
           regularMarketChangePercent: z.number().optional(),
           regularMarketVolume: z.number().optional(),
@@ -82,11 +83,12 @@ export class StockQuotesServer {
           trailingPE: z.number().optional(),
           forwardPE: z.number().optional(),
           dividendYield: z.number().optional(),
-          marketState: z.string().optional(),
+          marketState: z.string().optional(),*/
         },
       },
-      async ({ ticker, fields }) => {
-        const quote = await this.stockService.getQuote({ ticker, fields });
+      async ({ ticker /*, fields*/ }) => {
+        console.log(`Fetching stock quote for ticker: ${ticker}`);
+        const quote = await this.stockService.getQuote({ ticker /*, fields*/ });
 
         return {
           content: [
@@ -121,6 +123,7 @@ export class StockQuotesServer {
         },
       },
       async ({ query }) => {
+        console.log(`Searching stocks with query: ${query}`);
         const results = await this.stockService.search(query);
 
         return {

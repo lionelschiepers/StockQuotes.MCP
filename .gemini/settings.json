@@ -1,5 +1,11 @@
 {
-  "mcpServers": {
+  "mcpServers": {/*
+    "stock-quotes-http": {
+      "httpUrl": "http://localhost:3000/mcp",
+      "headers": {
+        "Accept": "application/json"
+      }
+    },*/
     "stock-quotes": {
       "command": "node",
       "args": [

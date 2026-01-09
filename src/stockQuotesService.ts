@@ -20,7 +20,7 @@ export class StockQuotesService {
    * @returns Promise<StockQuoteResponse> - The stock quote data
    */
   async getQuote(input: StockQuoteInput): Promise<StockQuoteResponse> {
-    const { ticker, fields } = input;
+    const { ticker /*, fields*/ } = input;
 
     try {
       // Fetch quote data from Yahoo Finance
@@ -37,9 +37,10 @@ export class StockQuotesService {
           (quote as { shortName?: string | null }).shortName ??
           (quote as { longName?: string | null }).longName ??
           undefined,
-        exchange: (quote as { exchange?: string }).exchange,
         currency: (quote as { currency?: string }).currency,
-        regularMarketPrice: (quote as { regularMarketPrice?: number }).regularMarketPrice,
+        exchange: (quote as { exchange?: string }).exchange,
+        price: (quote as { regularMarketPrice?: number }).regularMarketPrice,
+        /*
         regularMarketChange: (quote as { regularMarketChange?: number }).regularMarketChange,
         regularMarketChangePercent: (quote as { regularMarketChangePercent?: number })
           .regularMarketChangePercent,
@@ -58,7 +59,7 @@ export class StockQuotesService {
         bookValue: (quote as { bookValue?: number }).bookValue,
         priceToBook: (quote as { priceToBook?: number }).priceToBook,
         marketState: (quote as { marketState?: string }).marketState,
-        quoteType: (quote as { quoteType?: string }).quoteType,
+        quoteType: (quote as { quoteType?: string }).quoteType,*/
       };
 
       return response;

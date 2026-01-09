@@ -43,7 +43,7 @@ mcp-server-stockquotes/
 
 ### Prerequisites
 
-- Node.js 18.0.0 or higher (LTS version recommended)
+- Node.js 22.0.0 or higher (LTS version recommended)
 - npm 9.0.0 or higher
 
 ### Setup
@@ -230,7 +230,7 @@ Gemini CLI supports MCP servers through its configuration file. Here's how to co
 **Method 1: Using Gemini CLI command (if supported)**
 ```bash
 # Add the server to your configuration
-gemini add-mcp-server --name stock-quotes --command "node /path/to/mcp-server-stockquotes/dist/index.js" --transport stdio
+gemini mcp add stock-quotes node "\path\node\project\dist\index.js --transport stdio"
 ```
 
 **Method 2: Manual Configuration**

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "stock-quotes": {
+      "command": "node",
+      "args": [
+        "C:\\Storage\\Git\\StockQuotes.MCP\\dist\\index.js", 
+        "--transport",
+        "stdio"
+      ]
+    }
+  }
+}

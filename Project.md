@@ -6,9 +6,12 @@ Specifications:
 Technical Specifications:
 - Prepare a Node/TypeScript project named `mcp-server-stockquotes` that:
 -- Functions as an MCP server.
--- Supports stdio, SSE, and HTTP transports.
-- The backend should be built with Node.js.
-- Use lint for code check & prettier for code formating.
+-- Supports stdio, SSE, and HTTP transports. stdio is the primary transport because it best fit CLI tools.
+- Use the latest 3.x version of Yahoo Finance npm package.
+- Use latest LTS node 24.x
+- Use the latest version of the packags. You can use 'npm outdated' to check for outdated packages.
+- Use linting for code check. The command 'npm run lint' executes the linting.
+- Use prettier for code formating. The command 'npm run format' executes the code formating.
 - Use async/await to handle asynchronous operations properly.
 - Always use context7 for code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
 - Create unit test for regression test and code coverage. Jest can be a good choice.
@@ -21,4 +24,5 @@ Technical Specifications:
 -- this project
 -- file structure
 -- how it can be integrated in different AI platforms like Gemini CLI, VS Code, Cline.
+- make sure 'npm install', 'npm run build', 'npm test', 'npm run lint', 'npm run format' works finewithout failure.
 

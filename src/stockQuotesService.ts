@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import YahooFinance from 'yahoo-finance2';
 import type { StockQuoteInput, StockQuoteResponse } from './types.js';
 
@@ -125,14 +126,29 @@ export class StockQuotesService {
    * @param toDate - End date in 'YYYY-MM-DD' format
    * @returns Promise<number[]> - An array of closing prices for each day.
    */
-  async getHistoricalData(ticker: string, fromDate: string, toDate: string): Promise<number[]> {
+  async getHistoricalData(
+    ticker: string,
+    fromDate: string,
+    toDate: string
+  ): Promise<
+    Array<{ date: string; close: number | null; high: number | null; low: number | null }>
+  > {
     try {
       const chart = await yahooFinance.chart(ticker, { period1: fromDate, period2: toDate });
-      const closingPrices = chart.quotes.map((quote) => quote.close).filter((close): close is number => close !== null);
+      const closingPrices = chart.quotes
+        .map((quote) => ({
+          date: format(quote.date, 'yyyy-MM-dd'),
+          close: quote.close,
+          high: quote.high,
+          low: quote.low,
+        }))
+        .filter((quote) => quote.close !== null);
       return closingPrices;
     } catch (error) {
       console.error(`Error fetching historical data for ${ticker}:`, error);
-      throw new Error(`Could not fetch historical data for ${ticker}. Please check the ticker and date range.`);
+      throw new Error(
+        `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
+      );
     }
   }
 }

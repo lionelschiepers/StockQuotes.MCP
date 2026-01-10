@@ -149,15 +149,31 @@ export class StockQuotesServer {
     this.server.registerTool(
       `get_historical_data_${process.pid}`,
       {
-        title: 'Get Historical Data',
-        description: 'Fetch historical stock data for a given ticker, from a start date to an end date. Returns an array of closing prices for each day.',
+        title: 'Get Historical Data for a TICKER',
+        description:
+          'Fetch historical stock data for a given ticker, from a start date to an end date. Returns an array of closing prices for each day.',
         inputSchema: {
           ticker: z.string().min(1).max(10).describe('Stock ticker symbol (e.g., AAPL)'),
-          fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('Start date in YYYY-MM-DD format'),
-          toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('End date in YYYY-MM-DD format'),
+          fromDate: z
+            .string()
+            .regex(/^\d{4}-\d{2}-\d{2}$/)
+            .describe('Start date in YYYY-MM-DD format'),
+          toDate: z
+            .string()
+            .regex(/^\d{4}-\d{2}-\d{2}$/)
+            .describe('End date in YYYY-MM-DD format'),
         },
         outputSchema: {
-          closingPrices: z.array(z.number()).describe('An array of closing prices for each day.'),
+          closingPrices: z
+            .array(
+              z.object({
+                date: z.string().describe('Date in YYYY-MM-DD format'),
+                close: z.number().optional().describe('Closing price on that date'),
+                high: z.number().optional().describe('Higher price on that date'),
+                low: z.number().optional().describe('Lowest price on that date'),
+              })
+            )
+            .describe('An array of objects representing the closing prices for each day.'),
         },
       },
       async ({ ticker, fromDate, toDate }) => {

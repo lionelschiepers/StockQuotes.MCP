@@ -113,11 +113,13 @@ export class StockQuotesService {
           }>;
         }
       ).quotes ?? [];
-    return quotes.map((result) => ({
-      symbol: result.symbol,
-      name: result.shortname ?? result.longname ?? '',
-      exchange: result.exchange,
-    }));
+    return quotes
+      .filter((quote) => quote.symbol !== undefined)
+      .map((result) => ({
+        symbol: result.symbol,
+        name: result.shortname ?? result.longname ?? '',
+        exchange: result.exchange,
+      }));
   }
 
   /**

@@ -54,7 +54,7 @@ export class StockQuotesServer {
    */
   private registerTools(): void {
     this.server.registerTool(
-      `get_stock_quote_${process.pid}`,
+      `get_stock_quote`,
       {
         title: 'Get Stock Quote',
         description:
@@ -100,9 +100,9 @@ export class StockQuotesServer {
           marketState: z.string().optional(),*/
         },
       },
-      async ({ ticker /*, fields*/ }) => {
+      async ({ ticker, fields }) => {
         console.log(`Fetching stock quote for ticker: ${ticker}`);
-        const quote = await this.stockService.getQuote({ ticker /*, fields*/ });
+        const quote = await this.stockService.getQuote({ ticker, fields });
 
         return {
           content: [

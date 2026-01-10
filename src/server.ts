@@ -198,36 +198,14 @@ export class StockQuotesServer {
   private setupExpressRoutes(): void {
     // Main MCP endpoint
     this.expressApp.post('/mcp', async (req, res) => {
-      const sessionId = req.headers['mcp-session-id'] as string | undefined;
-      let transport: StreamableHTTPServerTransport;
+      // Create a new transport for each request
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => randomUUID(),
+      });
 
-      if (sessionId && this.transports.has(sessionId)) {
-        // Reuse existing session
-        transport = this.transports.get(sessionId)!;
-      } else if (!sessionId && isInitializeRequest(req.body)) {
-        // New session initialization
-        transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID(),
-          onsessioninitialized: (id) => {
-            this.transports.set(id, transport);
-            console.log(`Session initialized: ${id}`);
-          },
-          onsessionclosed: (id) => {
-            this.transports.delete(id);
-            console.log(`Session closed: ${id}`);
-          },
-        });
-
-        await this.server.connect(transport);
-      } else {
-        res.status(400).json({
-          jsonrpc: '2.0',
-          error: { code: -32000, message: 'Invalid session' },
-          id: null,
-        });
-        return;
-      }
-
+      // Connect the transport to the server
+      await this.server.connect(transport);
+      // Handle the request
       await transport.handleRequest(req, res, req.body);
     });
 

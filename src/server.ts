@@ -16,7 +16,7 @@ export class StockQuotesServer {
   private config: ServerConfig;
   private stockService: StockQuotesService;
   private expressApp: express.Application;
-  private transports: Map<string, StreamableHTTPServerTransport>;
+  private httpTransport: StreamableHTTPServerTransport;
 
   /**
    * Create a new instance of the StockQuotesServer
@@ -25,12 +25,16 @@ export class StockQuotesServer {
   constructor(config: ServerConfig) {
     this.config = config;
     this.stockService = stockQuotesService;
-    this.transports = new Map();
 
     // Initialize MCP server
     this.server = new McpServer({
       name: config.name,
       version: config.version,
+    });
+
+    // Initialize HTTP transport
+    this.httpTransport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
     });
 
     // Register tools
@@ -40,6 +44,9 @@ export class StockQuotesServer {
     this.expressApp = express();
     this.expressApp.use(express.json());
     this.setupExpressRoutes();
+
+    // Connect the transport to the server
+    void this.server.connect(this.httpTransport);
   }
 
   /**
@@ -197,16 +204,13 @@ export class StockQuotesServer {
    */
   private setupExpressRoutes(): void {
     // Main MCP endpoint
-    this.expressApp.post('/mcp', async (req, res) => {
-      // Create a new transport for each request
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
+    this.expressApp.post('/mcp', (req, res) => {
+      this.httpTransport.handleRequest(req, res, req.body).catch((err) => {
+        console.error('Error handling request:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Internal Server Error' });
+        }
       });
-
-      // Connect the transport to the server
-      await this.server.connect(transport);
-      // Handle the request
-      await transport.handleRequest(req, res, req.body);
     });
 
     // Health check endpoint

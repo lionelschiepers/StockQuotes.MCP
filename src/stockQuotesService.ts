@@ -131,7 +131,13 @@ export class StockQuotesService {
     fromDate: string,
     toDate: string
   ): Promise<
-    Array<{ date: string; close: number | null; high: number | null; low: number | null }>
+    Array<{
+      date: string;
+      close: number | null;
+      high: number | null;
+      low: number | null;
+      volume: number | null;
+    }>
   > {
     try {
       const chart = await yahooFinance.chart(ticker, { period1: fromDate, period2: toDate });
@@ -141,6 +147,7 @@ export class StockQuotesService {
           close: quote.close,
           high: quote.high,
           low: quote.low,
+          volume: quote.volume,
         }))
         .filter((quote) => quote.close !== null);
       return closingPrices;

@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import express from 'express';
 import { randomUUID } from 'node:crypto';
 import * as z from 'zod';
@@ -171,6 +170,7 @@ export class StockQuotesServer {
                 close: z.number().optional().describe('Closing price on that date'),
                 high: z.number().optional().describe('Higher price on that date'),
                 low: z.number().optional().describe('Lowest price on that date'),
+                volume: z.number().optional().describe('Exchanged volume on that date'),
               })
             )
             .describe('An array of objects representing the closing prices for each day.'),

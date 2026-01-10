@@ -175,7 +175,7 @@ export class StockQuotesServer {
         return;
       }
 
-      transport.handleRequest(req, res, req.body);
+      await transport.handleRequest(req, res, req.body);
     });
 
     // Health check endpoint
@@ -193,10 +193,10 @@ export class StockQuotesServer {
         await this.connectStdio();
         break;
       case 'http':
-        await this.connectHttp();
+        this.connectHttp();
         break;
       case 'sse':
-        await this.connectSSE();
+        this.connectSSE();
         break;
       default:
         throw new Error(`Unsupported transport type: ${this.config.transport}`);
@@ -215,9 +215,9 @@ export class StockQuotesServer {
   /**
    * Connect using HTTP transport
    */
-  private async connectHttp(): Promise<void> {
+  private connectHttp(): void {
     const port = this.config.httpPort ?? 3000;
-    void this.expressApp.listen(port, () => {
+    this.expressApp.listen(port, () => {
       console.log(`MCP Server running on http://localhost:${port}/mcp`);
     });
   }
@@ -226,9 +226,9 @@ export class StockQuotesServer {
    * Connect using SSE transport
    * Note: SSE is deprecated in favor of Streamable HTTP, but we support it for compatibility
    */
-  private async connectSSE(): Promise<void> {
+  private connectSSE(): void {
     const port = this.config.ssePort ?? 3001;
-    void this.expressApp.listen(port, () => {
+    this.expressApp.listen(port, () => {
       console.log(`MCP Server running on http://localhost:${port}/mcp (SSE compatible)`);
     });
   }

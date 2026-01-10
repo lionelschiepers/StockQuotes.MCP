@@ -13,7 +13,7 @@ LABEL version="1.0.0"
 COPY package*.json ./
 
 # Install dependencies with security flags
-RUN npm ci --no-optional && \
+RUN if [ -f package-lock.json ]; then npm ci --no-optional; else npm install --no-optional; fi && \
     npm cache clean --force
 
 # Copy source code (excluding files in .dockerignore)
@@ -38,7 +38,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist/
 
 # Install only production dependencies
-RUN npm ci --only=production --no-optional && \
+RUN if [ -f package-lock.json ]; then npm ci --only=production --no-optional; else npm install --only=production --no-optional; fi && \
     npm cache clean --force && \
     npm r -g npm
 

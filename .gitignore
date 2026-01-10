@@ -41,7 +41,6 @@ Thumbs.db
 ehthumbs.db
 
 # Package lock files (optional, if using pnpm or yarn)
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
 

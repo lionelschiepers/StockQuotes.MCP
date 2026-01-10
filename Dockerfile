@@ -33,19 +33,20 @@ LABEL maintainer="lionel_schiepers@hotmail.com"
 LABEL description="MCP Server for fetching stock quotes from Yahoo Finance"
 LABEL version="1.0.0"
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 -G nodejs
-
 # Copy only necessary files from builder stage
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist/
 
 # Install only production dependencies
 RUN npm ci --only=production --no-optional && \
-    npm cache clean --force
+    npm cache clean --force && \
+    npm r -g npm
 
 # Switch to non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 -G nodejs && \
+    chown -R nodejs:nodejs /app
+
 USER nodejs
 
 # Expose ports for HTTP and SSE transports

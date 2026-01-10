@@ -25,7 +25,8 @@ export class StockQuotesService {
 
     try {
       // Fetch quote data from Yahoo Finance
-      const quote = await yahooFinance.quote(ticker, { fields: fields });
+      const options = fields ? { fields: fields } : undefined;
+      const quote = await yahooFinance.quote(ticker, options);
 
       // Transform the response to our interface
       const response: StockQuoteResponse = {

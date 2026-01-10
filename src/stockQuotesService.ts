@@ -1,7 +1,9 @@
 import YahooFinance from 'yahoo-finance2';
 import type { StockQuoteInput, StockQuoteResponse } from './types.js';
 
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({
+  suppressNotices: ['yahooSurvey'],
+});
 
 /**
  * Service for fetching stock quotes from Yahoo Finance
@@ -18,15 +20,11 @@ export class StockQuotesService {
    * @returns Promise<StockQuoteResponse> - The stock quote data
    */
   async getQuote(input: StockQuoteInput): Promise<StockQuoteResponse> {
-    const { ticker /*, fields*/ } = input;
+    const { ticker, fields } = input;
 
     try {
       // Fetch quote data from Yahoo Finance
-      const quote = await yahooFinance.quote(
-        ticker /*, {
-        fields: fields as never,
-      }*/
-      );
+      const quote = await yahooFinance.quote(ticker, { fields: fields });
 
       // Transform the response to our interface
       const response: StockQuoteResponse = {

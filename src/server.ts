@@ -61,10 +61,18 @@ export class StockQuotesServer {
             .min(1)
             .max(10)
             .describe('Stock ticker symbol (e.g., AAPL, GOOGL, MSFT)'),
-          /* fields: z
+          fields: z
             .array(z.string())
             .optional()
-            .describe('Optional list of specific fields to return'),*/
+            .prefault([
+              'symbol',
+              'shortName',
+              'longName',
+              'currency',
+              'exchange',
+              'regularMarketPrice',
+            ])
+            .describe('Optional list of specific fields to return'),
         },
         outputSchema: {
           symbol: z.string().describe('Stock ticker symbol'),

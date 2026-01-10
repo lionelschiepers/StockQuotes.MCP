@@ -199,7 +199,7 @@ export class StockQuotesServer {
         this.connectSSE();
         break;
       default:
-        throw new Error(`Unsupported transport type: ${this.config.transport}`);
+        throw new Error(`Unsupported transport type: ${this.config.transport as string}`);
     }
   }
 

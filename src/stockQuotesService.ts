@@ -117,6 +117,24 @@ export class StockQuotesService {
       exchange: result.exchange,
     }));
   }
+
+  /**
+   * Fetches historical stock data for a given ticker, from a start date to an end date.
+   * @param ticker - Stock ticker symbol (e.g., AAPL)
+   * @param fromDate - Start date in 'YYYY-MM-DD' format
+   * @param toDate - End date in 'YYYY-MM-DD' format
+   * @returns Promise<number[]> - An array of closing prices for each day.
+   */
+  async getHistoricalData(ticker: string, fromDate: string, toDate: string): Promise<number[]> {
+    try {
+      const chart = await yahooFinance.chart(ticker, { period1: fromDate, period2: toDate });
+      const closingPrices = chart.quotes.map((quote) => quote.close).filter((close): close is number => close !== null);
+      return closingPrices;
+    } catch (error) {
+      console.error(`Error fetching historical data for ${ticker}:`, error);
+      throw new Error(`Could not fetch historical data for ${ticker}. Please check the ticker and date range.`);
+    }
+  }
 }
 
 // Export a singleton instance for convenience

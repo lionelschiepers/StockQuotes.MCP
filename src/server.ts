@@ -145,6 +145,35 @@ export class StockQuotesServer {
         };
       }
     );
+
+    this.server.registerTool(
+      `get_historical_data_${process.pid}`,
+      {
+        title: 'Get Historical Data',
+        description: 'Fetch historical stock data for a given ticker, from a start date to an end date. Returns an array of closing prices for each day.',
+        inputSchema: {
+          ticker: z.string().min(1).max(10).describe('Stock ticker symbol (e.g., AAPL)'),
+          fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('Start date in YYYY-MM-DD format'),
+          toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('End date in YYYY-MM-DD format'),
+        },
+        outputSchema: {
+          closingPrices: z.array(z.number()).describe('An array of closing prices for each day.'),
+        },
+      },
+      async ({ ticker, fromDate, toDate }) => {
+        console.log(`Fetching historical data for ${ticker} from ${fromDate} to ${toDate}`);
+        const closingPrices = await this.stockService.getHistoricalData(ticker, fromDate, toDate);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({ closingPrices }, null, 2),
+            },
+          ],
+          structuredContent: { closingPrices },
+        };
+      }
+    );
   }
 
   /**

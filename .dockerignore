@@ -1,0 +1,41 @@
+# Dependency directories
+node_modules/
+npm-debug.log
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Version control
+.git/
+.gitignore
+
+# Build output
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Test files
+tests/
+*.test.*
+*.spec.*
+
+# Documentation
+*.md
+LICENSE
+
+# Coverage
+coverage/
+
+# Misc
+.DS_Store

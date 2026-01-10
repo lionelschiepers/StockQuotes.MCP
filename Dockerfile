@@ -1,3 +1,5 @@
+# exposed on port 30401, 30402 on personal network
+
 # Stage 1: Build stage
 FROM node:24-alpine AS builder
 

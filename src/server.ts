@@ -1,11 +1,8 @@
-import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import type express from 'express';
 import * as z from 'zod';
 import type { StockQuotesService } from './stockQuotesService.js';
 import { stockQuotesService } from './stockQuotesService.js';
+import { TransportFactory } from './transports/TransportFactory.js';
+import type { TransportStrategy } from './transports/TransportStrategy.js';
 import type { ServerConfig } from './types.js';
 
 /**
@@ -14,7 +11,7 @@ import type { ServerConfig } from './types.js';
 export class StockQuotesServer {
   private config: ServerConfig;
   private stockService: StockQuotesService;
-  private expressApp?: express.Application;
+  private transportStrategy: TransportStrategy;
 
   /**
    * Create a new instance of the StockQuotesServer
@@ -23,12 +20,13 @@ export class StockQuotesServer {
   constructor(config: ServerConfig) {
     this.config = config;
     this.stockService = stockQuotesService;
+    this.transportStrategy = TransportFactory.createTransport(config, this.stockService);
   }
 
   /**
    * Register all MCP tools on a server instance
    */
-  private registerToolsOnServer(server: McpServer): void {
+  private registerToolsOnServer(server: any): void {
     server.registerTool(
       `get_stock_quote`,
       {
@@ -64,7 +62,7 @@ export class StockQuotesServer {
           price: z.number().optional().describe('Current market price'),
         },
       },
-      async ({ ticker, fields }) => {
+      async ({ ticker, fields }: { ticker: string; fields?: string[] }) => {
         console.log(`Fetching stock quote for ticker: ${ticker}`);
         const quote = await this.stockService.getQuote({ ticker, fields });
 
@@ -100,7 +98,7 @@ export class StockQuotesServer {
           ),
         },
       },
-      async ({ query }) => {
+      async ({ query }: { query: string }) => {
         console.log(`Searching stocks with query: ${query}`);
         const results = await this.stockService.search(query);
 
@@ -147,7 +145,15 @@ export class StockQuotesServer {
             .describe('An array of objects representing the closing prices for each day.'),
         },
       },
-      async ({ ticker, fromDate, toDate }) => {
+      async ({
+        ticker,
+        fromDate,
+        toDate,
+      }: {
+        ticker: string;
+        fromDate: string;
+        toDate: string;
+      }) => {
         console.log(`Fetching historical data for ${ticker} from ${fromDate} to ${toDate}`);
         const closingPrices = await this.stockService.getHistoricalData(ticker, fromDate, toDate);
         return {
@@ -164,137 +170,27 @@ export class StockQuotesServer {
   }
 
   /**
-   * Setup Express routes for stateless Streamable HTTP transport
-   */
-  private setupExpressRoutes(): void {
-    this.expressApp ??= createMcpExpressApp();
-
-    // Main MCP endpoint for stateless Streamable HTTP
-    this.expressApp.post('/mcp', async (req, res) => {
-      try {
-        // Create a new MCP server instance for each request (stateless)
-        const server = new McpServer({
-          name: this.config.name,
-          version: this.config.version,
-        });
-
-        // Register tools on the server
-        this.registerToolsOnServer(server);
-
-        // Create stateless transport (no session tracking)
-        const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: undefined, // Stateless - no session tracking
-        });
-
-        // Connect server to transport
-        await server.connect(transport);
-
-        // Handle the request
-        await transport.handleRequest(req, res, req.body);
-
-        // Clean up when request is closed
-        res.on('close', async () => {
-          await transport.close();
-          await server.close();
-        });
-      } catch (error) {
-        console.error('Error handling MCP request:', error);
-        if (!res.headersSent) {
-          res.status(500).json({
-            jsonrpc: '2.0',
-            error: {
-              code: -32603,
-              message: 'Internal server error',
-            },
-            id: null,
-          });
-        }
-      }
-    });
-
-    // Health check endpoint
-    this.expressApp.get('/health', (req, res) => {
-      res.json({ status: 'healthy', name: this.config.name, version: this.config.version });
-    });
-
-    // Disallow GET and DELETE methods on /mcp endpoint
-    this.expressApp.get('/mcp', (req, res) => {
-      res.status(405).json({
-        jsonrpc: '2.0',
-        error: {
-          code: -32000,
-          message: 'Method not allowed.',
-        },
-        id: null,
-      });
-    });
-
-    this.expressApp.delete('/mcp', (req, res) => {
-      res.status(405).json({
-        jsonrpc: '2.0',
-        error: {
-          code: -32000,
-          message: 'Method not allowed.',
-        },
-        id: null,
-      });
-    });
-  }
-
-  /**
-   * Connect to the appropriate transport
+   * Connect to the appropriate transport using the strategy pattern
    */
   async connect(): Promise<void> {
-    switch (this.config.transport) {
-      case 'stdio':
-        await this.connectStdio();
-        break;
-      case 'http':
-        this.connectHttp();
-        break;
-      default:
-        throw new Error(`Unsupported transport type: ${this.config.transport as string}`);
-    }
-  }
-
-  /**
-   * Connect using stdio transport
-   */
-  private async connectStdio(): Promise<void> {
-    const server = new McpServer({
-      name: this.config.name,
-      version: this.config.version,
-    });
-
-    // Register tools on the server
+    // Register tools on the transport's server instance
+    const server = this.transportStrategy.getServer();
     this.registerToolsOnServer(server);
 
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    console.log('MCP Server connected via stdio transport');
-  }
-
-  /**
-   * Connect using HTTP transport
-   */
-  private connectHttp(): void {
-    // Initialize Express app only when needed for HTTP transport
-    this.setupExpressRoutes();
-
-    const port = this.config.httpPort ?? 3000;
-    this.expressApp?.listen(port, () => {
-      console.log(`MCP Server running on http://localhost:${port}/mcp`);
-    });
+    // Connect using the transport strategy
+    await this.transportStrategy.connect();
   }
 
   /**
    * Get the Express app instance (for testing or custom transport setups)
+   * Only available for HTTP transport
    */
-  getApp(): express.Application {
-    if (!this.expressApp) {
-      this.setupExpressRoutes();
+  getApp(): any {
+    // Check if the transport strategy has getApp method (HTTP transport)
+    if (typeof (this.transportStrategy as any).getApp === 'function') {
+      return (this.transportStrategy as any).getApp();
     }
-    return this.expressApp!;
+    throw new Error('Express app is only available for HTTP transport');
   }
 }
 

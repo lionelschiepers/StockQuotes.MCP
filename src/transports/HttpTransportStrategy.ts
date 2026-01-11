@@ -59,7 +59,7 @@ export class HttpTransportStrategy implements TransportStrategy {
    * Setup Express routes for stateless Streamable HTTP transport
    */
   private setupExpressRoutes(): void {
-    this.expressApp ??= createMcpExpressApp();
+    this.expressApp ??= createMcpExpressApp({ host: '0.0.0.0' });
 
     // Main MCP endpoint for stateless Streamable HTTP
     this.expressApp.post('/mcp', async (req, res) => {

@@ -123,10 +123,10 @@ export function registerToolsOnServer(
           .array(
             z.object({
               date: z.string().describe('Date in YYYY-MM-DD format'),
-              close: z.number().optional().describe('Closing price on that date'),
-              high: z.number().optional().describe('Higher price on that date'),
-              low: z.number().optional().describe('Lowest price on that date'),
-              volume: z.number().optional().describe('Exchanged volume on that date'),
+              close: z.number().describe('Closing price on that date'),
+              high: z.number().describe('Higher price on that date'),
+              low: z.number().describe('Lowest price on that date'),
+              volume: z.number().describe('Exchanged volume on that date'),
             })
           )
           .describe('An array of objects representing the closing prices for each day.'),

@@ -1,19 +1,19 @@
 import { format } from 'date-fns';
-import YahooFinance from 'yahoo-finance2';
-import type { StockQuoteInput, StockQuoteResponse } from './types.js';
-
-const yahooFinance = new YahooFinance({
-  suppressNotices: ['yahooSurvey'],
-});
+import type { HistoricalData, StockQuoteInput, StockQuoteResponse, StockSearchResult } from './types.js';
+import type { YahooClient } from './yahooFinanceClient.js';
 
 /**
  * Service for fetching stock quotes from Yahoo Finance
  */
 export class StockQuotesService {
+  private readonly yahooClient: YahooClient;
+
   /**
    * Create a new instance of the StockQuotesService
    */
-  constructor() {}
+  constructor(yahooClient: YahooClient) {
+    this.yahooClient = yahooClient;
+  }
 
   /**
    * Fetch a stock quote for the given ticker symbol
@@ -23,48 +23,61 @@ export class StockQuotesService {
   async getQuote(input: StockQuoteInput): Promise<StockQuoteResponse> {
     const { ticker, fields } = input;
 
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
     try {
       // Fetch quote data from Yahoo Finance
-      const options = fields ? { fields: fields } : undefined;
-      const quote = await yahooFinance.quote(ticker, options);
+      const options = fields ? { fields } : undefined;
+      const result: any = await this.yahooClient.quote(ticker, options);
 
-      // Transform the response to our interface
+      // The yahoo-finance2 library can return a single quote, an array of quotes, or undefined.
+      // We need to handle all cases to ensure type safety.
+      if (!result) {
+        throw new Error(`Stock ticker '${ticker}' not found`);
+      }
+
+      // If the result is an array, take the first element.
+      const quote: any = Array.isArray(result) ? result[0] : result;
+
+      // After potentially taking the first element, check if the quote itself is valid.
+      if (!quote) {
+        throw new Error(`Stock ticker '${ticker}' not found`);
+      }
+
+      // Transform the response to our interface, mapping all relevant fields.
       const response: StockQuoteResponse = {
-        symbol: (quote as { symbol?: string }).symbol ?? ticker,
-        name:
-          (quote as { shortName?: string | null }).shortName ??
-          (quote as { longName?: string | null }).longName ??
-          undefined,
-        currency: (quote as { currency?: string }).currency,
-        exchange: (quote as { exchange?: string }).exchange,
-        price: (quote as { regularMarketPrice?: number }).regularMarketPrice,
-        /*
-        regularMarketChange: (quote as { regularMarketChange?: number }).regularMarketChange,
-        regularMarketChangePercent: (quote as { regularMarketChangePercent?: number })
-          .regularMarketChangePercent,
-        regularMarketVolume: (quote as { regularMarketVolume?: number }).regularMarketVolume,
-        marketCap: (quote as { marketCap?: number }).marketCap,
-        fiftyTwoWeekLow: (quote as { fiftyTwoWeekLow?: number }).fiftyTwoWeekLow,
-        fiftyTwoWeekHigh: (quote as { fiftyTwoWeekHigh?: number }).fiftyTwoWeekHigh,
-        averageDailyVolume3Month: (quote as { averageDailyVolume3Month?: number })
-          .averageDailyVolume3Month,
-        trailingPE: (quote as { trailingPE?: number }).trailingPE,
-        forwardPE: (quote as { forwardPE?: number }).forwardPE,
-        dividendYield: (quote as { dividendYield?: number }).dividendYield,
-        epsTrailingTwelveMonths: (quote as { epsTrailingTwelveMonths?: number })
-          .epsTrailingTwelveMonths,
-        epsForward: (quote as { epsForward?: number }).epsForward,
-        bookValue: (quote as { bookValue?: number }).bookValue,
-        priceToBook: (quote as { priceToBook?: number }).priceToBook,
-        marketState: (quote as { marketState?: string }).marketState,
-        quoteType: (quote as { quoteType?: string }).quoteType,*/
+        symbol: quote.symbol ?? ticker,
+        name: quote.shortName ?? quote.longName,
+        exchange: quote.exchange,
+        currency: quote.currency,
+        regularMarketPrice: quote.regularMarketPrice,
+        regularMarketChange: quote.regularMarketChange,
+        regularMarketChangePercent: quote.regularMarketChangePercent,
+        regularMarketVolume: quote.regularMarketVolume,
+        marketCap: quote.marketCap,
+        fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
+        fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
+        averageDailyVolume3Month: quote.averageDailyVolume3Month,
+        trailingPE: quote.trailingPE,
+        forwardPE: quote.forwardPE,
+        dividendYield: quote.dividendYield,
+        epsTrailingTwelveMonths: quote.epsTrailingTwelveMonths,
+        epsForward: quote.epsForward,
+        bookValue: quote.bookValue,
+        priceToBook: quote.priceToBook,
+        marketState: quote.marketState,
+        quoteType: quote.quoteType,
       };
+
+      // Remove any properties that are undefined to keep the response clean.
+      Object.keys(response).forEach(
+        (key) => response[key as keyof StockQuoteResponse] === undefined && delete response[key as keyof StockQuoteResponse]
+      );
 
       return response;
     } catch (error) {
       // Handle specific error cases
       if (error instanceof Error) {
-        if (error.message.includes('No definition')) {
+        if (error.message.includes('No definition') || error.message.includes('not found')) {
           throw new Error(`Stock ticker '${ticker}' not found`);
         }
         if (error.message.includes('rate limit')) {
@@ -72,6 +85,8 @@ export class StockQuotesService {
         }
       }
       throw error;
+    } finally {
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
     }
   }
 
@@ -81,17 +96,19 @@ export class StockQuotesService {
    * @returns Promise<Map<string, StockQuoteResponse>> - Map of ticker to stock quote data
    */
   async getMultipleQuotes(tickers: string[]): Promise<Map<string, StockQuoteResponse>> {
-    const quotes = await yahooFinance.quote(tickers);
-    const result = new Map<string, StockQuoteResponse>();
+    const results = new Map<string, StockQuoteResponse>();
 
     for (const ticker of tickers) {
-      const quote = quotes[ticker as keyof typeof quotes];
-      if (quote) {
-        result.set(ticker, await this.getQuote({ ticker }));
+      try {
+        const quote = await this.getQuote({ ticker });
+        results.set(ticker, quote);
+      } catch (error) {
+        // Log the error for the individual ticker but continue with the rest
+        console.error(`Failed to fetch quote for ${ticker}:`, error);
       }
     }
 
-    return result;
+    return results;
   }
 
   /**
@@ -99,27 +116,24 @@ export class StockQuotesService {
    * @param query - Search query string
    * @returns Promise<Array<{symbol: string, name: string, exchange: string}>> - Search results
    */
-  async search(query: string): Promise<Array<{ symbol: string; name: string; exchange: string }>> {
-    const results = await yahooFinance.search(query);
-    // The search result has a quotes array with the actual results
-    const quotes =
-      (
-        results as {
-          quotes?: Array<{
-            symbol: string;
-            shortname?: string | null;
-            longname?: string | null;
-            exchange: string;
-          }>;
-        }
-      ).quotes ?? [];
-    return quotes
-      .filter((quote) => quote.symbol !== undefined)
-      .map((result) => ({
+  async search(query: string): Promise<StockSearchResult[]> {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
+    const results: any = await this.yahooClient.search(query);
+    const quotes: any[] = results.quotes ?? []; // Explicitly type as any[]
+
+    return (quotes as StockSearchResult[]) // Cast the array to StockSearchResult[] here
+      .filter(
+        (quote: any): quote is StockSearchResult =>
+          typeof quote.symbol === 'string' &&
+          typeof quote.exchange === 'string' &&
+          (typeof quote.shortname === 'string' || typeof quote.longname === 'string')
+      )
+      .map((result: any): StockSearchResult => ({
         symbol: result.symbol,
         name: result.shortname ?? result.longname ?? '',
         exchange: result.exchange,
       }));
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
   }
 
   /**
@@ -133,35 +147,32 @@ export class StockQuotesService {
     ticker: string,
     fromDate: string,
     toDate: string
-  ): Promise<
-    Array<{
-      date: string;
-      close: number | null;
-      high: number | null;
-      low: number | null;
-      volume: number | null;
-    }>
-  > {
+  ): Promise<HistoricalData[]> {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
     try {
-      const chart = await yahooFinance.chart(ticker, { period1: fromDate, period2: toDate });
-      const closingPrices = chart.quotes
-        .map((quote) => ({
-          date: format(quote.date, 'yyyy-MM-dd'),
-          close: quote.close,
-          high: quote.high,
-          low: quote.low,
-          volume: quote.volume,
-        }))
-        .filter((quote) => quote.close !== null);
-      return closingPrices;
+      const chart: any = await this.yahooClient.chart(ticker, { period1: fromDate, period2: toDate });
+      const historicalData: HistoricalData[] = [];
+
+      for (const quote of chart.quotes) {
+        if (quote.date && quote.close && quote.high && quote.low && quote.volume) {
+          historicalData.push({
+            date: format(new Date(quote.date), 'yyyy-MM-dd'),
+            close: quote.close,
+            high: quote.high,
+            low: quote.low,
+            volume: quote.volume,
+          });
+        }
+      }
+
+      return historicalData;
     } catch (error) {
       console.error(`Error fetching historical data for ${ticker}:`, error);
       throw new Error(
         `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
       );
+    } finally {
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
     }
   }
 }
-
-// Export a singleton instance for convenience
-export const stockQuotesService = new StockQuotesService();

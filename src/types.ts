@@ -40,6 +40,22 @@ export interface StockQuoteResponse {
   [key: string]: unknown;
 }
 
+// Interface for stock search result
+export interface StockSearchResult {
+  symbol: string;
+  name: string;
+  exchange: string;
+}
+
+// Interface for historical data
+export interface HistoricalData {
+  date: string;
+  close: number;
+  high: number;
+  low: number;
+  volume: number;
+}
+
 // Transport types
 export type TransportType = 'stdio' | 'http';
 

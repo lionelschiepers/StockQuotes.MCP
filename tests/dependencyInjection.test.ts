@@ -4,24 +4,36 @@
 
 import { StockQuotesServer } from '../src/server.js';
 import { StockQuotesService } from '../src/stockQuotesService.js';
+import type { YahooClient } from '../src/yahooFinanceClient.js';
+import type { HistoricalData, StockQuoteResponse, StockSearchResult } from '../src/types.js';
+
+// Create a mock YahooClient for testing
+class MockYahooClient implements YahooClient {
+  quote = jest.fn();
+  search = jest.fn();
+  chart = jest.fn();
+}
 
 // Mock StockQuotesService for testing
 class MockStockQuotesService extends StockQuotesService {
-  async getQuote() {
+  constructor(yahooClient: YahooClient) {
+    super(yahooClient);
+  }
+  async getQuote(): Promise<StockQuoteResponse> {
     return {
       symbol: 'MOCK',
       name: 'Mock Stock',
       currency: 'USD',
       exchange: 'NASDAQ',
-      price: 100,
+      regularMarketPrice: 100,
     };
   }
 
-  async search() {
+  async search(): Promise<StockSearchResult[]> {
     return [{ symbol: 'MOCK', name: 'Mock Company', exchange: 'NASDAQ' }];
   }
 
-  async getHistoricalData() {
+  async getHistoricalData(): Promise<HistoricalData[]> {
     return [
       {
         date: '2023-01-01',
@@ -35,35 +47,29 @@ class MockStockQuotesService extends StockQuotesService {
 }
 
 describe('Dependency Injection', () => {
+  let mockYahooClient: MockYahooClient;
+  let mockStockService: MockStockQuotesService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockYahooClient = new MockYahooClient();
+    mockStockService = new MockStockQuotesService(mockYahooClient);
+  });
+
   it('should use injected StockQuotesService when provided', () => {
-    const mockService = new MockStockQuotesService();
     const config = {
       name: 'test-server',
       version: '1.0.0',
       transport: 'stdio' as const,
     };
 
-    const server = new StockQuotesServer(config, mockService);
+    const server = new StockQuotesServer(config, mockStockService);
 
     // Verify that the server is using our mock service
     expect(server).toBeInstanceOf(StockQuotesServer);
   });
 
-  it('should use default StockQuotesService when none provided', () => {
-    const config = {
-      name: 'test-server',
-      version: '1.0.0',
-      transport: 'stdio' as const,
-    };
-
-    const server = new StockQuotesServer(config);
-
-    // Verify that the server is created successfully with default service
-    expect(server).toBeInstanceOf(StockQuotesServer);
-  });
-
   it('should allow factory function to use injected service', async () => {
-    const mockService = new MockStockQuotesService();
     const config = {
       name: 'test-server',
       version: '1.0.0',
@@ -71,7 +77,7 @@ describe('Dependency Injection', () => {
     };
 
     // Note: We can't actually connect in tests, but we can verify the server creation
-    const server = new StockQuotesServer(config, mockService);
+    const server = new StockQuotesServer(config, mockStockService);
 
     expect(server).toBeInstanceOf(StockQuotesServer);
   });

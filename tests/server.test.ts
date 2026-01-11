@@ -1,10 +1,45 @@
 import { StockQuotesServer } from '../src/server.js';
-import { stockQuotesService } from '../src/stockQuotesService.js';
+import { StockQuotesService } from '../src/stockQuotesService.js';
 import { HttpTransportStrategy } from '../src/transports/HttpTransportStrategy.js';
 import { StdioTransportStrategy } from '../src/transports/StdioTransportStrategy.js';
 import { TransportFactory } from '../src/transports/TransportFactory.js';
+import type { YahooClient } from '../src/yahooFinanceClient.js';
+import type { HistoricalData, StockQuoteResponse, StockSearchResult } from '../src/types.js';
+
+// Create a mock YahooClient
+class MockYahooClient implements YahooClient {
+  quote = jest.fn();
+  search = jest.fn();
+  chart = jest.fn();
+}
+
+// Create a mock StockQuotesService that implements the interface
+class MockStockQuotesService extends StockQuotesService {
+  constructor(yahooClient: YahooClient) {
+    super(yahooClient);
+    this.getQuote = jest.fn();
+    this.getMultipleQuotes = jest.fn();
+    this.search = jest.fn();
+    this.getHistoricalData = jest.fn();
+  }
+
+  // Explicitly type the mocked methods
+  getQuote: jest.Mock<Promise<StockQuoteResponse>, any>;
+  getMultipleQuotes: jest.Mock<Promise<Map<string, StockQuoteResponse>>, any>;
+  search: jest.Mock<Promise<StockSearchResult[]>, any>;
+  getHistoricalData: jest.Mock<Promise<HistoricalData[]>, any>;
+}
 
 describe('StockQuotesServer Refactoring', () => {
+  let mockYahooClient: MockYahooClient;
+  let mockStockService: MockStockQuotesService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockYahooClient = new MockYahooClient();
+    mockStockService = new MockStockQuotesService(mockYahooClient);
+  });
+
   describe('Transport Strategy Pattern', () => {
     it('should create stdio transport strategy', () => {
       const config = {
@@ -14,7 +49,7 @@ describe('StockQuotesServer Refactoring', () => {
         httpPort: 3000,
       };
 
-      const strategy = TransportFactory.createTransport(config, stockQuotesService);
+      const strategy = TransportFactory.createTransport(config, mockStockService);
       expect(strategy).toBeInstanceOf(StdioTransportStrategy);
       expect(strategy.getType()).toBe('stdio');
     });
@@ -27,7 +62,7 @@ describe('StockQuotesServer Refactoring', () => {
         httpPort: 3000,
       };
 
-      const strategy = TransportFactory.createTransport(config, stockQuotesService);
+      const strategy = TransportFactory.createTransport(config, mockStockService);
       expect(strategy).toBeInstanceOf(HttpTransportStrategy);
       expect(strategy.getType()).toBe('http');
     });
@@ -41,7 +76,7 @@ describe('StockQuotesServer Refactoring', () => {
       };
 
       expect(() => {
-        TransportFactory.createTransport(config, stockQuotesService);
+        TransportFactory.createTransport(config, mockStockService);
       }).toThrow('Unsupported transport type: websocket');
     });
   });
@@ -55,7 +90,7 @@ describe('StockQuotesServer Refactoring', () => {
         httpPort: 3000,
       };
 
-      const server = new StockQuotesServer(config);
+      const server = new StockQuotesServer(config, mockStockService);
       expect(server).toBeInstanceOf(StockQuotesServer);
     });
 
@@ -67,7 +102,7 @@ describe('StockQuotesServer Refactoring', () => {
         httpPort: 3000,
       };
 
-      const server = new StockQuotesServer(config);
+      const server = new StockQuotesServer(config, mockStockService);
       expect(server).toBeInstanceOf(StockQuotesServer);
     });
   });
@@ -81,7 +116,7 @@ describe('StockQuotesServer Refactoring', () => {
         httpPort: 3000,
       };
 
-      const server = new StockQuotesServer(config);
+      const server = new StockQuotesServer(config, mockStockService);
       expect(typeof server.connect).toBe('function');
     });
 
@@ -93,7 +128,7 @@ describe('StockQuotesServer Refactoring', () => {
         httpPort: 3000,
       };
 
-      const server = new StockQuotesServer(config);
+      const server = new StockQuotesServer(config, mockStockService);
       expect(typeof server.getApp).toBe('function');
     });
   });

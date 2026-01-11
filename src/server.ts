@@ -1,9 +1,10 @@
 import type { StockQuotesService } from './stockQuotesService.js';
-import { stockQuotesService } from './stockQuotesService.js';
+import { StockQuotesService as StockQuotesServiceImpl } from './stockQuotesService.js';
 import { registerToolsOnServer } from './toolRegistration.js';
 import { TransportFactory } from './transports/TransportFactory.js';
 import type { TransportStrategy } from './transports/TransportStrategy.js';
 import type { ServerConfig } from './types.js';
+import { YahooFinanceClient } from './yahooFinanceClient.js';
 
 /**
  * MCP Server for Stock Quotes using Yahoo Finance
@@ -18,9 +19,9 @@ export class StockQuotesServer {
    * @param config - Server configuration
    * @param stockService - Stock quotes service (dependency injected)
    */
-  constructor(config: ServerConfig, stockService?: StockQuotesService) {
+  constructor(config: ServerConfig, stockService: StockQuotesService) {
     this.config = config;
-    this.stockService = stockService ?? stockQuotesService;
+    this.stockService = stockService;
     this.transportStrategy = TransportFactory.createTransport(config, this.stockService);
   }
 
@@ -56,8 +57,7 @@ export class StockQuotesServer {
  * Factory function to create and start the server
  */
 export async function createServer(
-  config?: Partial<ServerConfig>,
-  stockService?: StockQuotesService
+  config?: Partial<ServerConfig>
 ): Promise<StockQuotesServer> {
   const serverConfig: ServerConfig = {
     name: 'stock-quotes-server',
@@ -67,6 +67,8 @@ export async function createServer(
     ...config,
   };
 
+  const yahooClient = new YahooFinanceClient();
+  const stockService = new StockQuotesServiceImpl(yahooClient);
   const server = new StockQuotesServer(serverConfig, stockService);
   await server.connect();
   return server;

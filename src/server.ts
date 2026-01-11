@@ -56,9 +56,7 @@ export class StockQuotesServer {
 /**
  * Factory function to create and start the server
  */
-export async function createServer(
-  config?: Partial<ServerConfig>
-): Promise<StockQuotesServer> {
+export async function createServer(config?: Partial<ServerConfig>): Promise<StockQuotesServer> {
   const serverConfig: ServerConfig = {
     name: 'stock-quotes-server',
     version: '1.0.0',

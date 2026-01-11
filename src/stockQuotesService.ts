@@ -1,5 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
+ 
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { format } from 'date-fns';
-import type { HistoricalData, StockQuoteInput, StockQuoteResponse, StockSearchResult } from './types.js';
+import type {
+  HistoricalData,
+  StockQuoteInput,
+  StockQuoteResponse,
+  StockSearchResult,
+} from './types.js';
 import type { YahooClient } from './yahooFinanceClient.js';
 
 /**
@@ -23,7 +33,7 @@ export class StockQuotesService {
   async getQuote(input: StockQuoteInput): Promise<StockQuoteResponse> {
     const { ticker, fields } = input;
 
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
       // Fetch quote data from Yahoo Finance
       const options = fields ? { fields } : undefined;
@@ -70,7 +80,9 @@ export class StockQuotesService {
 
       // Remove any properties that are undefined to keep the response clean.
       Object.keys(response).forEach(
-        (key) => response[key as keyof StockQuoteResponse] === undefined && delete response[key as keyof StockQuoteResponse]
+        (key) =>
+          response[key as keyof StockQuoteResponse] === undefined &&
+          delete response[key as keyof StockQuoteResponse]
       );
 
       return response;
@@ -86,7 +98,7 @@ export class StockQuotesService {
       }
       throw error;
     } finally {
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
+      /* eslint-enable @typescript-eslint/no-explicit-any */
     }
   }
 
@@ -117,7 +129,7 @@ export class StockQuotesService {
    * @returns Promise<Array<{symbol: string, name: string, exchange: string}>> - Search results
    */
   async search(query: string): Promise<StockSearchResult[]> {
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     const results: any = await this.yahooClient.search(query);
     const quotes: any[] = results.quotes ?? []; // Explicitly type as any[]
 
@@ -128,12 +140,14 @@ export class StockQuotesService {
           typeof quote.exchange === 'string' &&
           (typeof quote.shortname === 'string' || typeof quote.longname === 'string')
       )
-      .map((result: any): StockSearchResult => ({
-        symbol: result.symbol,
-        name: result.shortname ?? result.longname ?? '',
-        exchange: result.exchange,
-      }));
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
+      .map(
+        (result: any): StockSearchResult => ({
+          symbol: result.symbol,
+          name: result.shortname ?? result.longname ?? '',
+          exchange: result.exchange,
+        })
+      );
+    /* eslint-enable @typescript-eslint/no-explicit-any */
   }
 
   /**
@@ -148,9 +162,12 @@ export class StockQuotesService {
     fromDate: string,
     toDate: string
   ): Promise<HistoricalData[]> {
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
-      const chart: any = await this.yahooClient.chart(ticker, { period1: fromDate, period2: toDate });
+      const chart: any = await this.yahooClient.chart(ticker, {
+        period1: fromDate,
+        period2: toDate,
+      });
       const historicalData: HistoricalData[] = [];
 
       for (const quote of chart.quotes) {
@@ -172,7 +189,7 @@ export class StockQuotesService {
         `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
       );
     } finally {
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
+      /* eslint-enable @typescript-eslint/no-explicit-any */
     }
   }
 }

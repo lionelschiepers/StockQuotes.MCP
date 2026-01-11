@@ -1,8 +1,8 @@
+import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import express from 'express';
-import { randomUUID } from 'node:crypto';
+import type express from 'express';
 import * as z from 'zod';
 import type { StockQuotesService } from './stockQuotesService.js';
 import { stockQuotesService } from './stockQuotesService.js';
@@ -12,11 +12,9 @@ import type { ServerConfig } from './types.js';
  * MCP Server for Stock Quotes using Yahoo Finance
  */
 export class StockQuotesServer {
-  private server: McpServer;
   private config: ServerConfig;
   private stockService: StockQuotesService;
   private expressApp: express.Application;
-  private httpTransport: StreamableHTTPServerTransport;
 
   /**
    * Create a new instance of the StockQuotesServer
@@ -26,34 +24,16 @@ export class StockQuotesServer {
     this.config = config;
     this.stockService = stockQuotesService;
 
-    // Initialize MCP server
-    this.server = new McpServer({
-      name: config.name,
-      version: config.version,
-    });
-
-    // Initialize HTTP transport
-    this.httpTransport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: () => randomUUID(),
-    });
-
-    // Register tools
-    this.registerTools();
-
-    // Setup Express app for HTTP/SSE transports
-    this.expressApp = express();
-    this.expressApp.use(express.json());
+    // Setup Express app using createMcpExpressApp for stateless Streamable HTTP
+    this.expressApp = createMcpExpressApp();
     this.setupExpressRoutes();
-
-    // Connect the transport to the server
-    void this.server.connect(this.httpTransport);
   }
 
   /**
-   * Register all MCP tools
+   * Register all MCP tools on a server instance
    */
-  private registerTools(): void {
-    this.server.registerTool(
+  private registerToolsOnServer(server: McpServer): void {
+    server.registerTool(
       `get_stock_quote`,
       {
         title: 'Get Stock Quote',
@@ -70,7 +50,7 @@ export class StockQuotesServer {
           fields: z
             .array(z.string())
             .optional()
-            .prefault([
+            .default([
               'symbol',
               'shortName',
               'longName',
@@ -86,18 +66,6 @@ export class StockQuotesServer {
           currency: z.string().optional().describe('Currency of the stock price'),
           exchange: z.string().optional().describe('Exchange where the stock is listed'),
           price: z.number().optional().describe('Current market price'),
-          /*,
-          regularMarketChange: z.number().optional(),
-          regularMarketChangePercent: z.number().optional(),
-          regularMarketVolume: z.number().optional(),
-          marketCap: z.number().optional(),
-          fiftyTwoWeekLow: z.number().optional(),
-          fiftyTwoWeekHigh: z.number().optional(),
-          averageDailyVolume3Month: z.number().optional(),
-          trailingPE: z.number().optional(),
-          forwardPE: z.number().optional(),
-          dividendYield: z.number().optional(),
-          marketState: z.string().optional(),*/
         },
       },
       async ({ ticker, fields }) => {
@@ -116,7 +84,7 @@ export class StockQuotesServer {
       }
     );
 
-    this.server.registerTool(
+    server.registerTool(
       'search_stocks',
       {
         title: 'Search Stocks',
@@ -152,7 +120,7 @@ export class StockQuotesServer {
       }
     );
 
-    this.server.registerTool(
+    server.registerTool(
       `get_historical_data_${process.pid}`,
       {
         title: 'Get Historical Data for a TICKER',
@@ -200,22 +168,78 @@ export class StockQuotesServer {
   }
 
   /**
-   * Setup Express routes for HTTP/SSE transports
+   * Setup Express routes for stateless Streamable HTTP transport
    */
   private setupExpressRoutes(): void {
-    // Main MCP endpoint
-    this.expressApp.post('/mcp', (req, res) => {
-      this.httpTransport.handleRequest(req, res, req.body).catch((err) => {
-        console.error('Error handling request:', err);
+    // Main MCP endpoint for stateless Streamable HTTP
+    this.expressApp.post('/mcp', async (req, res) => {
+      try {
+        // Create a new MCP server instance for each request (stateless)
+        const server = new McpServer({
+          name: this.config.name,
+          version: this.config.version,
+        });
+
+        // Register tools on the server
+        this.registerToolsOnServer(server);
+
+        // Create stateless transport (no session tracking)
+        const transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: undefined, // Stateless - no session tracking
+        });
+
+        // Connect server to transport
+        await server.connect(transport);
+
+        // Handle the request
+        await transport.handleRequest(req, res, req.body);
+
+        // Clean up when request is closed
+        res.on('close', async () => {
+          await transport.close();
+          await server.close();
+        });
+      } catch (error) {
+        console.error('Error handling MCP request:', error);
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Internal Server Error' });
+          res.status(500).json({
+            jsonrpc: '2.0',
+            error: {
+              code: -32603,
+              message: 'Internal server error',
+            },
+            id: null,
+          });
         }
-      });
+      }
     });
 
     // Health check endpoint
     this.expressApp.get('/health', (req, res) => {
       res.json({ status: 'healthy', name: this.config.name, version: this.config.version });
+    });
+
+    // Disallow GET and DELETE methods on /mcp endpoint
+    this.expressApp.get('/mcp', (req, res) => {
+      res.status(405).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Method not allowed.',
+        },
+        id: null,
+      });
+    });
+
+    this.expressApp.delete('/mcp', (req, res) => {
+      res.status(405).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Method not allowed.',
+        },
+        id: null,
+      });
     });
   }
 
@@ -230,9 +254,6 @@ export class StockQuotesServer {
       case 'http':
         this.connectHttp();
         break;
-      case 'sse':
-        this.connectSSE();
-        break;
       default:
         throw new Error(`Unsupported transport type: ${this.config.transport as string}`);
     }
@@ -242,8 +263,16 @@ export class StockQuotesServer {
    * Connect using stdio transport
    */
   private async connectStdio(): Promise<void> {
+    const server = new McpServer({
+      name: this.config.name,
+      version: this.config.version,
+    });
+
+    // Register tools on the server
+    this.registerToolsOnServer(server);
+
     const transport = new StdioServerTransport();
-    await this.server.connect(transport);
+    await server.connect(transport);
     console.log('MCP Server connected via stdio transport');
   }
 
@@ -254,17 +283,6 @@ export class StockQuotesServer {
     const port = this.config.httpPort ?? 3000;
     this.expressApp.listen(port, () => {
       console.log(`MCP Server running on http://localhost:${port}/mcp`);
-    });
-  }
-
-  /**
-   * Connect using SSE transport
-   * Note: SSE is deprecated in favor of Streamable HTTP, but we support it for compatibility
-   */
-  private connectSSE(): void {
-    const port = this.config.ssePort ?? 3001;
-    this.expressApp.listen(port, () => {
-      console.log(`MCP Server running on http://localhost:${port}/mcp (SSE compatible)`);
     });
   }
 
@@ -285,7 +303,6 @@ export async function createServer(config?: Partial<ServerConfig>): Promise<Stoc
     version: '1.0.0',
     transport: 'stdio',
     httpPort: 3000,
-    ssePort: 3001,
     ...config,
   };
 

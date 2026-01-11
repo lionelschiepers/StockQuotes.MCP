@@ -9,19 +9,17 @@
  * Usage:
  *   node dist/index.js --transport stdio    # Start with stdio transport
  *   node dist/index.js --transport http     # Start with HTTP transport (port 3000)
- *   node dist/index.js --transport sse      # Start with SSE transport (port 3001)
  */
 
 import { createServer } from './server.js';
 import type { TransportType } from './types.js';
 
 // Parse command line arguments
-function parseArgs(): { transport: TransportType; httpPort?: number; ssePort?: number } {
+function parseArgs(): { transport: TransportType; httpPort?: number } {
   const args = process.argv.slice(2);
   const result = {
     transport: 'stdio' as TransportType,
     httpPort: 3000,
-    ssePort: 3001,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -32,11 +30,11 @@ function parseArgs(): { transport: TransportType; httpPort?: number; ssePort?: n
       case '-t':
         if (i + 1 < args.length) {
           const transport = args[++i].toLowerCase() as TransportType;
-          if (['stdio', 'http', 'sse'].includes(transport)) {
+          if (['stdio', 'http'].includes(transport)) {
             result.transport = transport;
           } else {
             console.error(`Invalid transport: ${transport}`);
-            console.error('Valid transports: stdio, http, sse');
+            console.error('Valid transports: stdio, http');
             process.exit(1);
           }
         }
@@ -48,17 +46,6 @@ function parseArgs(): { transport: TransportType; httpPort?: number; ssePort?: n
           result.httpPort = parseInt(args[++i], 10);
           if (isNaN(result.httpPort) || result.httpPort <= 0 || result.httpPort > 65535) {
             console.error('Invalid HTTP port. Port must be between 1 and 65535');
-            process.exit(1);
-          }
-        }
-        break;
-
-      case '--sse-port':
-      case '--ssePort':
-        if (i + 1 < args.length) {
-          result.ssePort = parseInt(args[++i], 10);
-          if (isNaN(result.ssePort) || result.ssePort <= 0 || result.ssePort > 65535) {
-            console.error('Invalid SSE port. Port must be between 1 and 65535');
             process.exit(1);
           }
         }
@@ -90,18 +77,15 @@ MCP Stock Quotes Server
 Usage: node dist/index.js [options]
 
 Options:
-  --transport, -t <stdio|http|sse>
+  --transport, -t <stdio|http>
     Specify the transport type to use (default: stdio)
-  
+
   --http-port <port>
-    Specify the HTTP port for HTTP/SSE transport (default: 3000 for HTTP, 3001 for SSE)
-  
-  --sse-port <port>
-    Specify the SSE port for SSE transport (default: 3001)
-  
+    Specify the HTTP port for HTTP transport (default: 3000)
+
   --help, -h
     Show this help message
-  
+
   --version, -v
     Show version information
 
@@ -111,9 +95,6 @@ Examples:
 
   # Start with HTTP transport on port 8080
   node dist/index.js --transport http --http-port 8080
-
-  # Start with SSE transport on port 8081
-  node dist/index.js --transport sse --sse-port 8081
 
 For more information, visit: https://github.com/yourusername/mcp-server-stockquotes
 `);
@@ -136,7 +117,6 @@ async function main(): Promise<void> {
       version: '1.0.0',
       transport: args.transport,
       httpPort: args.httpPort,
-      ssePort: args.ssePort,
     });
 
     console.log('Server started successfully');

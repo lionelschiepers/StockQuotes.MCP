@@ -41,7 +41,7 @@ export interface StockQuoteResponse {
 }
 
 // Transport types
-export type TransportType = 'stdio' | 'http' | 'sse';
+export type TransportType = 'stdio' | 'http';
 
 // Server configuration interface
 export interface ServerConfig {
@@ -49,5 +49,4 @@ export interface ServerConfig {
   version: string;
   transport: TransportType;
   httpPort?: number;
-  ssePort?: number;
 }

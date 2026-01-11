@@ -6,14 +6,6 @@ import type { TransportStrategy } from './transports/TransportStrategy.js';
 import type { ServerConfig } from './types.js';
 
 /**
- * Type for MCP Server instance
- */
-type McpServerInstance = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  registerTool: (name: string, config: any, handler: any) => void;
-};
-
-/**
  * MCP Server for Stock Quotes using Yahoo Finance
  */
 export class StockQuotesServer {

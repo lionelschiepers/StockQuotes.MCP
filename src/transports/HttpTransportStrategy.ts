@@ -46,8 +46,11 @@ export class HttpTransportStrategy implements TransportStrategy {
   async connect(): Promise<void> {
     this.setupExpressRoutes();
 
-    this.expressApp?.listen(this.httpPort, () => {
-      console.log(`MCP Server running on http://localhost:${this.httpPort}/mcp`);
+    await new Promise<void>((resolve) => {
+      this.expressApp?.listen(this.httpPort, () => {
+        console.log(`MCP Server running on http://localhost:${this.httpPort}/mcp`);
+        resolve();
+      });
     });
   }
 

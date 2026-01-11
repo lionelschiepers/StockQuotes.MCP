@@ -26,7 +26,9 @@ export class StockQuotesServer {
   /**
    * Register all MCP tools on a server instance
    */
-  private registerToolsOnServer(server: any): void {
+  private registerToolsOnServer(server: {
+    registerTool: (name: string, config: any, handler: any) => void;
+  }): void {
     server.registerTool(
       `get_stock_quote`,
       {
@@ -187,8 +189,9 @@ export class StockQuotesServer {
    */
   getApp(): any {
     // Check if the transport strategy has getApp method (HTTP transport)
-    if (typeof (this.transportStrategy as any).getApp === 'function') {
-      return (this.transportStrategy as any).getApp();
+    const strategy = this.transportStrategy as unknown as { getApp?: () => any };
+    if (typeof strategy.getApp === 'function') {
+      return strategy.getApp();
     }
     throw new Error('Express app is only available for HTTP transport');
   }

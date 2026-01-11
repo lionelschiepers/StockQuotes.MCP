@@ -1,4 +1,4 @@
-# exposed on port 30401, 30402 on personal network
+# exposed on port 30401 on personal network
 
 # Stage 1: Build stage
 FROM node:24-alpine AS builder
@@ -58,7 +58,7 @@ RUN addgroup -g 1001 -S nodejs && \
 USER nodejs
 
 # Expose ports for HTTP and SSE transports
-EXPOSE 3000 3001
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

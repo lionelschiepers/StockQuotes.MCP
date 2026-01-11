@@ -6,6 +6,14 @@ import type { TransportStrategy } from './transports/TransportStrategy.js';
 import type { ServerConfig } from './types.js';
 
 /**
+ * Type for MCP Server instance
+ */
+type McpServerInstance = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  registerTool: (name: string, config: any, handler: any) => void;
+};
+
+/**
  * MCP Server for Stock Quotes using Yahoo Finance
  */
 export class StockQuotesServer {
@@ -26,9 +34,7 @@ export class StockQuotesServer {
   /**
    * Register all MCP tools on a server instance
    */
-  private registerToolsOnServer(server: {
-    registerTool: (name: string, config: any, handler: any) => void;
-  }): void {
+  private registerToolsOnServer(server: McpServerInstance): void {
     server.registerTool(
       `get_stock_quote`,
       {
@@ -187,8 +193,10 @@ export class StockQuotesServer {
    * Get the Express app instance (for testing or custom transport setups)
    * Only available for HTTP transport
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getApp(): any {
     // Check if the transport strategy has getApp method (HTTP transport)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const strategy = this.transportStrategy as unknown as { getApp?: () => any };
     if (typeof strategy.getApp === 'function') {
       return strategy.getApp();

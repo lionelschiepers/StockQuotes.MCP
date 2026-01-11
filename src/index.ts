@@ -44,7 +44,7 @@ function parseArgs(): { transport: TransportType; httpPort?: number } {
       case '--httpPort':
         if (i + 1 < args.length) {
           result.httpPort = parseInt(args[++i], 10);
-          if (isNaN(result.httpPort) || result.httpPort <= 0 || result.httpPort > 65535) {
+          if (Number.isNaN(result.httpPort) || result.httpPort <= 0 || result.httpPort > 65535) {
             console.error('Invalid HTTP port. Port must be between 1 and 65535');
             process.exit(1);
           }

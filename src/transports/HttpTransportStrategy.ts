@@ -3,6 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type express from 'express';
 import type { StockQuotesService } from '../stockQuotesService.js';
+import { registerToolsOnServer } from '../toolRegistration.js';
 import type { TransportStrategy } from './TransportStrategy.js';
 
 /**
@@ -68,6 +69,9 @@ export class HttpTransportStrategy implements TransportStrategy {
           name: this.serverName,
           version: this.serverVersion,
         });
+
+        // Register tools on the new server instance
+        registerToolsOnServer(server, this.stockService);
 
         // Create stateless transport (no session tracking)
         const transport = new StreamableHTTPServerTransport({

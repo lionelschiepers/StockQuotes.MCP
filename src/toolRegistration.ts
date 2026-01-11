@@ -102,7 +102,7 @@ export function registerToolsOnServer(
   );
 
   server.registerTool(
-    `get_historical_data_${process.pid}`,
+    `get_historical_data`,
     {
       title: 'Get Historical Data for a TICKER',
       description:

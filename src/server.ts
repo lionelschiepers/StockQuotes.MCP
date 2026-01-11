@@ -14,7 +14,7 @@ import type { ServerConfig } from './types.js';
 export class StockQuotesServer {
   private config: ServerConfig;
   private stockService: StockQuotesService;
-  private expressApp: express.Application;
+  private expressApp?: express.Application;
 
   /**
    * Create a new instance of the StockQuotesServer
@@ -23,10 +23,6 @@ export class StockQuotesServer {
   constructor(config: ServerConfig) {
     this.config = config;
     this.stockService = stockQuotesService;
-
-    // Setup Express app using createMcpExpressApp for stateless Streamable HTTP
-    this.expressApp = createMcpExpressApp();
-    this.setupExpressRoutes();
   }
 
   /**
@@ -171,6 +167,8 @@ export class StockQuotesServer {
    * Setup Express routes for stateless Streamable HTTP transport
    */
   private setupExpressRoutes(): void {
+    this.expressApp ??= createMcpExpressApp();
+
     // Main MCP endpoint for stateless Streamable HTTP
     this.expressApp.post('/mcp', async (req, res) => {
       try {
@@ -280,8 +278,11 @@ export class StockQuotesServer {
    * Connect using HTTP transport
    */
   private connectHttp(): void {
+    // Initialize Express app only when needed for HTTP transport
+    this.setupExpressRoutes();
+
     const port = this.config.httpPort ?? 3000;
-    this.expressApp.listen(port, () => {
+    this.expressApp?.listen(port, () => {
       console.log(`MCP Server running on http://localhost:${port}/mcp`);
     });
   }
@@ -290,7 +291,10 @@ export class StockQuotesServer {
    * Get the Express app instance (for testing or custom transport setups)
    */
   getApp(): express.Application {
-    return this.expressApp;
+    if (!this.expressApp) {
+      this.setupExpressRoutes();
+    }
+    return this.expressApp!;
   }
 }
 

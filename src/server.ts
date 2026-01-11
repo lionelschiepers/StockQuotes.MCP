@@ -24,10 +24,11 @@ export class StockQuotesServer {
   /**
    * Create a new instance of the StockQuotesServer
    * @param config - Server configuration
+   * @param stockService - Stock quotes service (dependency injected)
    */
-  constructor(config: ServerConfig) {
+  constructor(config: ServerConfig, stockService?: StockQuotesService) {
     this.config = config;
-    this.stockService = stockQuotesService;
+    this.stockService = stockService ?? stockQuotesService;
     this.transportStrategy = TransportFactory.createTransport(config, this.stockService);
   }
 
@@ -208,7 +209,10 @@ export class StockQuotesServer {
 /**
  * Factory function to create and start the server
  */
-export async function createServer(config?: Partial<ServerConfig>): Promise<StockQuotesServer> {
+export async function createServer(
+  config?: Partial<ServerConfig>,
+  stockService?: StockQuotesService
+): Promise<StockQuotesServer> {
   const serverConfig: ServerConfig = {
     name: 'stock-quotes-server',
     version: '1.0.0',
@@ -217,7 +221,7 @@ export async function createServer(config?: Partial<ServerConfig>): Promise<Stoc
     ...config,
   };
 
-  const server = new StockQuotesServer(serverConfig);
+  const server = new StockQuotesServer(serverConfig, stockService);
   await server.connect();
   return server;
 }

@@ -38,9 +38,9 @@ describe('StockQuotesService', () => {
     it('should fetch historical data and return closing prices', async () => {
       const mockChartResult = {
         quotes: [
-          { date: new Date('2023-01-01'), close: 100 },
-          { date: new Date('2023-01-02'), close: 101 },
-          { date: new Date('2023-01-03'), close: 102 },
+          { date: new Date('2023-01-01'), close: 100, high: 105, low: 95, volume: 1000000 },
+          { date: new Date('2023-01-02'), close: 101, high: 106, low: 96, volume: 1200000 },
+          { date: new Date('2023-01-03'), close: 102, high: 107, low: 97, volume: 1100000 },
         ],
       };
 
@@ -52,7 +52,11 @@ describe('StockQuotesService', () => {
 
       const closingPrices = await service.getHistoricalData(ticker, fromDate, toDate);
 
-      expect(closingPrices).toEqual([100, 101, 102]);
+      expect(closingPrices).toEqual([
+        { date: '2023-01-01', close: 100, high: 105, low: 95, volume: 1000000 },
+        { date: '2023-01-02', close: 101, high: 106, low: 96, volume: 1200000 },
+        { date: '2023-01-03', close: 102, high: 107, low: 97, volume: 1100000 },
+      ]);
       expect(mockChart).toHaveBeenCalledWith(ticker, { period1: fromDate, period2: toDate });
     });
 

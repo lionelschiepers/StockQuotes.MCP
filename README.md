@@ -142,6 +142,8 @@ Here is a real-world example of how an AI assistant (like Gemini) uses this MCP 
 ]
 ```
 
+![Example Interaction](README.sample1.png)
+
 ## 🤖 Integration with AI Platforms
 
 ### Cline

@@ -4,7 +4,7 @@ A Model Context Protocol (MCP) server for fetching stock quotes from Yahoo Finan
 
 ## 🚀 Features
 
-- **Multiple Transport Support**: stdio, HTTP, and SSE transports for flexible integration
+- **Multiple Transport Support**: stdio, HTTP for flexible integration
 - **Real-time Stock Quotes**: Fetch current prices, volume, market cap, and key metrics
 - **Stock Search**: Search for stocks by company name or ticker symbol
 - **Comprehensive Data**: Support for stocks, ETFs, cryptocurrencies, and other financial instruments
@@ -15,28 +15,34 @@ A Model Context Protocol (MCP) server for fetching stock quotes from Yahoo Finan
 ## 📁 Project Structure
 
 ```
-mcp-server-stockquotes/
+StockQuotes.MCP/
+├── .gemini/               # Gemini CLI configuration
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                 # GitHub Actions CI/CD workflow
-├── .vscode/
-│   ├── extensions.json            # VS Code extension recommendations
-│   └── settings.json              # VS Code workspace settings
+│       └── build.yml      # GitHub Actions CI workflow
+├── .husky/                # Git hooks configuration
+├── prompts/               # AI prompt templates
 ├── src/
-│   ├── index.ts                   # Main entry point with CLI
-│   ├── server.ts                  # MCP server implementation
-│   ├── stockQuotesService.ts      # Yahoo Finance service layer
-│   └── types.ts                   # TypeScript type definitions
-├── tests/
-│   └── stockQuotesService.test.ts # Unit tests
-├── .eslintrc.json                 # ESLint configuration
-├── .gitignore                     # Git ignore rules
-├── Dockerfile                     # Docker containerization
-├── jest.config.js                 # Jest testing configuration
-├── package.json                   # Project dependencies
-├── prettier.config.js             # Prettier code formatter
-├── tsconfig.json                  # TypeScript configuration
-└── README.md                      # This file
+│   ├── transports/        # Transport strategy implementations (stdio, HTTP)
+│   ├── index.ts           # Main entry point
+│   ├── server.ts          # MCP server implementation
+│   ├── stockQuotesService.ts # Service for fetching stock data
+│   ├── toolRegistration.ts # MCP tool registration logic
+│   ├── types.ts           # TypeScript type definitions
+│   └── yahooFinanceClient.ts # Yahoo Finance API client
+├── tests/                 # Unit and integration tests
+├── .dockerignore          # Docker ignore rules
+├── .gitignore             # Git ignore rules
+├── build.cmd              # Windows build script
+├── Dockerfile             # Docker containerization
+├── eslint.config.js       # ESLint flat configuration
+├── GEMINI.md              # Project-specific AI context
+├── jest.config.js         # Jest testing configuration
+├── LICENSE                # Project license
+├── package.json           # Project dependencies and scripts
+├── prettier.config.js     # Prettier code formatter
+├── tsconfig.json          # TypeScript configuration
+└── README.md              # This file
 ```
 
 ## 🛠️ Installation
@@ -50,8 +56,8 @@ mcp-server-stockquotes/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/mcp-server-stockquotes.git
-   cd mcp-server-stockquotes
+   git clone https://github.com/lionelschiepers/StockQuotes.MCP.git
+   cd StockQuotes.MCP
    ```
 
 2. **Install dependencies**
@@ -79,25 +85,26 @@ mcp-server-stockquotes/
    npm run format
    ```
 
+7. **Inspect server**
+   ```bash
+   npm run inspect
+   ```
+
 ## 🚦 Usage
 
 ### Command Line Options
 
 ```bash
-# Start with stdio transport (for CLI tools and MCP clients)
+# Start with stdio transport (for CLI tools)
 npm run start:stdio
 
 # Start with HTTP transport on default port 3000
 npm run start:http
 
-# Start with SSE transport on default port 3001
-npm run start:sse
-
-# Start with custom ports
+# Start with custom HTTP port
 npm run start:http -- --http-port 8080
-npm run start:sse -- --sse-port 8081
 
-# Development mode with hot reload
+# Development mode with hot reload (stdio transport)
 npm run dev
 ```
 
@@ -110,7 +117,14 @@ Fetch current stock quote data for a given ticker symbol.
 ```json
 {
   "ticker": "AAPL",
-  "fields": ["regularMarketPrice", "marketCap", "trailingPE"]
+  "fields": [
+    "symbol",
+    "shortName",
+    "longName",
+    "currency",
+    "exchange",
+    "regularMarketPrice"
+  ]
 }
 ```
 
@@ -119,17 +133,11 @@ Fetch current stock quote data for a given ticker symbol.
 {
   "symbol": "AAPL",
   "name": "Apple Inc.",
-  "exchange": "NASDAQ",
+  "exchange": "NMS",
   "currency": "USD",
-  "regularMarketPrice": 150.25,
-  "regularMarketChange": 2.5,
-  "regularMarketChangePercent": 1.69,
-  "regularMarketVolume": 50000000,
-  "marketCap": 2500000000000,
-  "fiftyTwoWeekLow": 120.0,
-  "fiftyTwoWeekHigh": 175.0,
-  "trailingPE": 25.0,
-  "marketState": "REGULAR"
+  "regularMarketPrice": 260.36,
+  "marketState": "REGULAR",
+  "quoteType": "EQUITY"
 }
 ```
 
@@ -139,89 +147,63 @@ Search for stocks by company name or ticker symbol.
 **Input:**
 ```json
 {
-  "query": "apple"
+  "query": "HIMS"
 }
 ```
 
 **Output:**
 ```json
-{
-  "results": [
-    {
-      "symbol": "AAPL",
-      "name": "Apple Inc.",
-      "exchange": "NASDAQ"
-    }
-  ]
-}
+[
+  {
+    "symbol": "HIMS",
+    "name": "Hims & Hers Health, Inc.",
+    "exchange": "NYQ"
+  },
+  {
+    "symbol": "HIMS.MX",
+    "name": "HIMS & HERS HEALTH INC",
+    "exchange": "MEX"
+  }
+]
 ```
 
 ## 🐳 Docker Usage
 
 ### Build the image
 ```bash
-docker build -t mcp-server-stockquotes:latest .
+docker build -t stockquotes-mcp:latest .
 ```
 
 ### Run the container
 
 **With HTTP transport:**
 ```bash
-docker run -p 3000:3000 mcp-server-stockquotes:latest
+docker run -p 3000:3000 stockquotes-mcp:latest
 ```
 
 **With stdio transport:**
 ```bash
-docker run --rm mcp-server-stockquotes:latest node dist/index.js --transport stdio
-```
-
-**With environment variables:**
-```bash
-docker run -e PORT=8080 -p 8080:3000 mcp-server-stockquotes:latest
-```
-
-### Using Docker Compose
-
-```yaml
-version: '3.8'
-services:
-  mcp-server:
-    image: mcp-server-stockquotes:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
+docker run --rm -it stockquotes-mcp:latest node dist/index.js --transport stdio
 ```
 
 ## 🤖 Integration with AI Platforms
 
-### Claude Code (Cline)
+### Cline
 
-1. **Using MCP CLI (Recommended)**
-   ```bash
-   # Add the server to your MCP configuration
-   mcp add-server stock-quotes-server --transport stdio --command "node /path/to/dist/index.js --transport stdio"
-   ```
-
-2. **Direct Integration**
+1. **Direct Integration**
    Add to your Cline MCP settings:
    ```json
    {
      "mcpServers": {
        "stock-quotes": {
-         "command": "node",
-         "args": ["/path/to/mcp-server-stockquotes/dist/index.js", "--transport", "stdio"]
+        "disabled": false,
+        "timeout": 120,
+        "type": "streamableHttp",
+        "url": "http://localhost:3000/mcp"
        }
      }
    }
    ```
-
-### VS Code
-
-1. Open the project in VS Code
-2. Install recommended extensions (prompted on first open)
-3. Use the integrated terminal to run commands
-4. Debug configurations are ready in `.vscode/launch.json`
 
 ### Gemini CLI
 
@@ -229,47 +211,40 @@ Gemini CLI supports MCP servers through its configuration file. Here's how to co
 
 **Method 1: Using Gemini CLI command (if supported)**
 ```bash
-# Add the server to your configuration
+# Add the server (CLI) to your configuration
 gemini mcp add stock-quotes node "\path\node\project\dist\index.js --transport stdio"
 ```
 
 **Method 2: Manual Configuration**
 
-1. Create or edit Gemini CLI's config file (typically `~/.config/gemini-cli/config.json` or `~/.gemini-cli.json`):
+1. Create or edit Gemini CLI's config file (typically `~/.gemini/settings.json`):
 
+HTTP
 ```json
 {
   "mcpServers": {
     "stock-quotes": {
-      "command": "node",
-      "args": ["/absolute/path/to/mcp-server-stockquotes/dist/index.js", "--transport", "stdio"],
-      "disabled": false,
-      "env": {
-        "NODE_ENV": "production"
+      "httpUrl": "http://localhost/mcp",
+      "headers": {
+        "Accept": "application/json, text/event-stream"
       }
     }
   }
 }
 ```
 
-**Method 3: Using environment-specific configuration**
-
-If you want different configurations for different environments:
-
+CLI
 ```json
 {
   "mcpServers": {
     "stock-quotes": {
       "command": "node",
-      "args": ["${HOME}/projects/mcp-server-stockquotes/dist/index.js", "--transport", "stdio"],
-      "disabled": false
-    },
-    "stock-quotes-https": {
-      "command": "node",
-      "args": ["${HOME}/projects/mcp-server-stockquotes/dist/index.js", "--transport", "http", "--http-port", "3000"],
-      "disabled": false,
-      "url": "http://localhost:3000/mcp"
-    }
+      "args": [
+        "./dist/index.js", 
+        "--transport",
+        "stdio"
+      ]
+    }  
   }
 }
 ```
@@ -280,10 +255,7 @@ After adding the configuration, verify it's working:
 
 ```bash
 # List configured MCP servers
-gemini list-mcp-servers
-
-# Test the connection
-gemini mcp stock-quotes get_stock_quote --ticker AAPL
+gemini mcp list
 ```
 
 **Using with Gemini CLI:**
@@ -291,10 +263,10 @@ gemini mcp stock-quotes get_stock_quote --ticker AAPL
 Once configured, you can use the tools in your conversations:
 
 ```
-Gemini, what's the current price of Apple stock?
+What's the current price of Apple stock?
 → This will use the get_stock_quote tool to fetch AAPL data
 
-Gemini, search for Microsoft stock
+Search for Microsoft stock
 → This will use the search_stocks tool to find MSFT
 ```
 
@@ -317,20 +289,10 @@ The server can be integrated with any MCP-compatible client:
 
 ## 🔧 Configuration
 
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment mode | `production` |
-| `PORT` | HTTP server port | `3000` |
-| `HTTP_PORT` | Override HTTP port | `3000` |
-| `SSE_PORT` | Override SSE port | `3001` |
-
 ### Transport Options
 
 - **stdio**: Best for CLI tools and local MCP clients
-- **HTTP**: Best for remote deployments and web-based clients
-- **SSE**: Best for clients that require Server-Sent Events
+- **http**: Best for remote deployments and web-based clients
 
 ## 📊 Available Stock Data
 
@@ -357,17 +319,6 @@ npm test
 npm run test:coverage
 ```
 
-### Run tests in watch mode
-```bash
-npm run test:watch
-```
-
-### Test coverage thresholds
-- Branches: 50%
-- Functions: 50%
-- Lines: 50%
-- Statements: 50%
-
 ## 🔍 Code Quality
 
 ### Linting
@@ -386,22 +337,19 @@ npm run format:check      # Check formatting
 
 The project includes a comprehensive GitHub Actions workflow that:
 
-1. **Lints and Tests**: Runs ESLint, Prettier, and Jest tests
-2. **Builds**: Compiles TypeScript and runs all checks
+1. **Builds**: Compiles TypeScript.
+2. **Tests**: Runs Jest tests
 3. **Containerizes**: Builds Docker images
-4. **Publishes**: Pushes to GitHub Container Registry
-5. **Releases**: Creates GitHub releases on version tags
+4. **Publishes**: Pushes to Docker Hub Container Registry
 
 ### Pipeline Triggers
 
 - **Push to main**: Full CI/CD pipeline
-- **Push to develop**: Lint and test only
-- **Pull requests**: Lint and test only
-- **Version tags (v*)**: Full release pipeline
+- **Push to feature**: Full CI pipeline
 
 ## 📝 API Reference
 
-### HTTP Endpoints (when using HTTP/SSE transport)
+### HTTP Endpoints (when using HTTP transport)
 
 - `POST /mcp` - MCP protocol endpoint
 - `GET /health` - Health check endpoint
@@ -451,9 +399,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/mcp-server-stockquotes/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mcp-server-stockquotes/discussions)
-- **Wiki**: [GitHub Wiki](https://github.com/yourusername/mcp-server-stockquotes/wiki)
+- **Issues**: [GitHub Issues](https://github.com/lionelschiepers/StockQuotes-MCP/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/lionelschiepers/StockQuotes-MCP/discussions)
 
 ---
 

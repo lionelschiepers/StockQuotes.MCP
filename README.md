@@ -19,6 +19,7 @@ This **Model Context Protocol (MCP)** server seamlessly bridges the gap between 
 - [Installation](#-installation)
 - [Usage](#-usage)
 - [Available Tools](#-available-mcp-tools)
+- [Example Interaction](#-example-interaction)
 - [Integration Guide](#-integration-with-ai-platforms)
   - [Cline](#cline)
   - [Gemini CLI](#gemini-cli)
@@ -115,6 +116,31 @@ Finds ticker symbols based on company names.
 
 *   **Example Prompt:** "Find the ticker for 'Hims & Hers'."
 *   **Returns:** List of matching symbols and names.
+
+## 💬 Example Interaction
+
+Here is a real-world example of how an AI assistant (like Gemini) uses this MCP server to perform data analysis:
+
+**User Prompt:**
+> "Using stock-quotes: Calculate the average price of AAPL for the last 200, 50 and 20 days. Output is {[{days, average}]}. Keep only 2 decimals for the numbers."
+
+**AI Response:**
+```json
+[
+  {
+    "days": 200,
+    "average": 233.12
+  },
+  {
+    "days": 50,
+    "average": 272.62
+  },
+  {
+    "days": 20,
+    "average": 270.57
+  }
+]
+```
 
 ## 🤖 Integration with AI Platforms
 

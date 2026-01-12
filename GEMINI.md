@@ -6,11 +6,13 @@ This is a .NET project for creating a server to fetch stock quotes. The project 
 
 ## Building and Running
 
-There are no build or run commands available yet.
-
+- 'npm run build' for building
+- 'npm test' for testing
+- 'npm run format' for formatting the code
+- 'npm run lint' for linting the code
 
 ## Development Conventions
 
 - Always use context7 when I need code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
-- Don't automatically update git.
-- make sure the code is linted and formated after each code modification.
+- Don't update git.
+- Lint and Format the project for each code modification.

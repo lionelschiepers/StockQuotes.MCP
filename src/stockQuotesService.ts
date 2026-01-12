@@ -35,7 +35,8 @@ export class StockQuotesService {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
       // Fetch quote data from Yahoo Finance
-      const options = fields ? { fields } : undefined;
+      const validFields = fields ? fields.filter((field: string) => field.length > 0) : undefined;
+      const options = validFields ? { fields: validFields } : undefined;
       const result: any = await this.yahooClient.quote(ticker, options);
 
       // The yahoo-finance2 library can return a single quote, an array of quotes, or undefined.

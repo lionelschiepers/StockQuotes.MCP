@@ -31,7 +31,7 @@ export function registerToolsOnServer(
         fields: z
           .array(z.string())
           .optional()
-          .default([
+          .prefault([
             'symbol',
             'shortName',
             'longName',

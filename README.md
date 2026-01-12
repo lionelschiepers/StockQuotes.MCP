@@ -399,8 +399,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/lionelschiepers/StockQuotes-MCP/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/lionelschiepers/StockQuotes-MCP/discussions)
+- **Issues**: [GitHub Issues](https://github.com/lionelschiepers/StockQuotes.MCP/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/lionelschiepers/StockQuotes.MCP/discussions)
 
 ---
 

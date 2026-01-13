@@ -183,7 +183,7 @@ gemini mcp add stock-quotes node "C:\Path\To\StockQuotes.MCP\dist\index.js --tra
 Edit your `~/.gemini/settings.json`:
 
 ```json
-Cli
+// CLI
 {
   "mcpServers": {
     "stock-quotes": {
@@ -200,7 +200,7 @@ Cli
 
 
 ```json
-HTTP
+// HTTP
 {
   "mcpServers": {
     "stock-quotes": {

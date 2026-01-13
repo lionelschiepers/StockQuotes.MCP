@@ -14,9 +14,6 @@ LABEL version="1.0.0"
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Update npm to the latest version
-RUN npm install -g npm@latest
-
 # Install dependencies with security flags
 RUN if [ -f package-lock.json ]; then npm ci --no-optional --ignore-scripts; else npm install --no-optional --ignore-scripts; fi && \
     npm cache clean --force
@@ -39,11 +36,8 @@ LABEL description="MCP Server for fetching stock quotes from Yahoo Finance"
 LABEL version="1.0.0"
 
 # Copy only necessary files from builder stage
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist/
-
-# Update npm to the latest version
-RUN npm install -g npm@latest
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist/
 
 # Install only production dependencies
 RUN if [ -f package-lock.json ]; then npm ci --only=production --no-optional --ignore-scripts; else npm install --only=production --no-optional --ignore-scripts; fi && \

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a .NET project for creating a server to fetch stock quotes. The project is currently in its initial state, with only the basic git repository structure and a Visual Studio `.gitignore` file. There is no source code yet.
+This is a TypeScript/Node.js project for creating a server to fetch stock quotes. The project implements a Model Context Protocol (MCP) server that provides tools for fetching stock quotes from Yahoo Finance.
 
 ## Building and Running
 

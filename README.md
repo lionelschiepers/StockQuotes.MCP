@@ -183,6 +183,7 @@ gemini mcp add stock-quotes node "C:\Path\To\StockQuotes.MCP\dist\index.js --tra
 Edit your `~/.gemini/settings.json`:
 
 ```json
+Cli
 {
   "mcpServers": {
     "stock-quotes": {
@@ -192,6 +193,21 @@ Edit your `~/.gemini/settings.json`:
         "--transport",
         "stdio"
       ]
+    }  
+  }
+}
+```
+
+
+```json
+HTTP
+{
+  "mcpServers": {
+    "stock-quotes": {
+      "httpUrl": "http://servername:port/mcp",
+      "headers": {
+        "Accept": "application/json, text/event-stream"
+      }
     }  
   }
 }

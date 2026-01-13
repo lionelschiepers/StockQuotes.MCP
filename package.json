@@ -24,7 +24,10 @@
     "dev": "tsx watch src/index.ts --transport stdio",
     "clean": "rm -rf dist",
     "inspect": "tsc && npx -y @modelcontextprotocol/inspector node dist/index.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "npm run build && npm run test",
+    "publish": "npm publish",
+    "publish:dry": "npm publish --dry-run"
   },
   "keywords": [
     "mcp",
@@ -33,8 +36,19 @@
     "mcp-server",
     "ai-tools"
   ],
-  "author": "",
+  "author": "Lionel Schiepers <lionel_schiepers@hotmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lionelschiepers/StockQuotes.MCP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lionelschiepers/StockQuotes.MCP/issues"
+  },
+  "homepage": "https://github.com/lionelschiepers/StockQuotes.MCP#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.2",
     "date-fns": "^4.1.0",

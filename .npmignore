@@ -1,0 +1,45 @@
+# Source files (we ship compiled JS)
+src/
+*.ts
+*.test.ts
+*.spec.ts
+
+# Build artifacts
+dist/
+coverage/
+
+# Development files
+.vscode/
+.github/
+.husky/
+.git/
+.gitignore
+
+# Configuration files
+tsconfig.json
+eslint.config.js
+prettier.config.js
+jest.config.js
+
+# Documentation
+README.md
+*.md
+!CHANGELOG.md
+
+# Assets
+*.png
+*.jpg
+
+# CI/CD
+Dockerfile
+.dockerignore
+build.cmd
+*.yml
+*.yaml
+
+# Other
+node_modules/
+.DS_Store
+.env
+.npmrc
+.editorconfig

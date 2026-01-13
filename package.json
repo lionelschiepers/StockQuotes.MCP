@@ -40,7 +40,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lionelschiepers/StockQuotes.MCP.git"
+    "url": "git+https://github.com/lionelschiepers/StockQuotes.MCP.git"
   },
   "bugs": {
     "url": "https://github.com/lionelschiepers/StockQuotes.MCP/issues"

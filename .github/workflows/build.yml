@@ -44,6 +44,8 @@ jobs:
 
       - name: Unit tests
         run: npm test -- --coverage
+        env:
+          NPM_CONFIG_UPDATE_NOTIFIER: false
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -66,14 +68,19 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          NPM_CONFIG_UPDATE_NOTIFIER: false
 
       - name: Run tests
         run: npm test
+        env:
+          NPM_CONFIG_UPDATE_NOTIFIER: false
 
       - name: Publish to npm
         run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_UPDATE_NOTIFIER: false
 
   docker-build:
     runs-on: ubuntu-latest

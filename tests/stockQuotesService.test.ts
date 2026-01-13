@@ -25,8 +25,6 @@ jest.mock('yahoo-finance2', () => {
   };
 });
 
-
-
 describe('StockQuotesService', () => {
   let service: StockQuotesService;
   let mockYahooClient: YahooClient;
@@ -53,21 +51,21 @@ describe('StockQuotesService', () => {
         shortName: 'Apple Inc.',
         exchange: 'NASDAQ',
         currency: 'USD',
-        regularMarketPrice: 170.00,
-        regularMarketChange: 1.00,
+        regularMarketPrice: 170.0,
+        regularMarketChange: 1.0,
         regularMarketChangePercent: 0.59,
         regularMarketVolume: 100000000,
         marketCap: 2800000000000,
-        fiftyTwoWeekLow: 130.00,
-        fiftyTwoWeekHigh: 180.00,
+        fiftyTwoWeekLow: 130.0,
+        fiftyTwoWeekHigh: 180.0,
         averageDailyVolume3Month: 90000000,
-        trailingPE: 25.00,
-        forwardPE: 23.00,
+        trailingPE: 25.0,
+        forwardPE: 23.0,
         dividendYield: 0.005,
-        epsTrailingTwelveMonths: 6.80,
-        epsForward: 7.30,
-        bookValue: 10.00,
-        priceToBook: 17.00,
+        epsTrailingTwelveMonths: 6.8,
+        epsForward: 7.3,
+        bookValue: 10.0,
+        priceToBook: 17.0,
         marketState: 'REGULAR',
         quoteType: 'EQUITY',
       };
@@ -81,21 +79,21 @@ describe('StockQuotesService', () => {
         name: 'Apple Inc.',
         exchange: 'NASDAQ',
         currency: 'USD',
-        regularMarketPrice: 170.00,
-        regularMarketChange: 1.00,
+        regularMarketPrice: 170.0,
+        regularMarketChange: 1.0,
         regularMarketChangePercent: 0.59,
         regularMarketVolume: 100000000,
         marketCap: 2800000000000,
-        fiftyTwoWeekLow: 130.00,
-        fiftyTwoWeekHigh: 180.00,
+        fiftyTwoWeekLow: 130.0,
+        fiftyTwoWeekHigh: 180.0,
         averageDailyVolume3Month: 90000000,
-        trailingPE: 25.00,
-        forwardPE: 23.00,
+        trailingPE: 25.0,
+        forwardPE: 23.0,
         dividendYield: 0.005,
-        epsTrailingTwelveMonths: 6.80,
-        epsForward: 7.30,
-        bookValue: 10.00,
-        priceToBook: 17.00,
+        epsTrailingTwelveMonths: 6.8,
+        epsForward: 7.3,
+        bookValue: 10.0,
+        priceToBook: 17.0,
         marketState: 'REGULAR',
         quoteType: 'EQUITY',
       });
@@ -119,7 +117,7 @@ describe('StockQuotesService', () => {
           shortName: 'Alphabet Inc. (GOOG)',
           exchange: 'NASDAQ',
           currency: 'USD',
-          regularMarketPrice: 100.00,
+          regularMarketPrice: 100.0,
         },
       ];
       mockQuote.mockResolvedValue(mockQuoteResultArray);
@@ -134,6 +132,7 @@ describe('StockQuotesService', () => {
 
   describe('getMultipleQuotes', () => {
     it('should fetch multiple stock quotes and handle errors gracefully', async () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const aaplQuote: any = { symbol: 'AAPL', regularMarketPrice: 170 };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -157,6 +156,8 @@ describe('StockQuotesService', () => {
         regularMarketPrice: 250,
       });
       expect(results.has('NONEXISTENT')).toBe(false);
+
+      errorSpy.mockRestore();
     });
   });
 
@@ -166,7 +167,12 @@ describe('StockQuotesService', () => {
       const mockSearchResult: any = {
         quotes: [
           { symbol: 'AAPL', shortname: 'Apple Inc.', exchange: 'NASDAQ', quoteType: 'EQUITY' },
-          { symbol: 'GOOGL', longname: 'Alphabet Inc. (GOOGL)', exchange: 'NASDAQ', quoteType: 'EQUITY' },
+          {
+            symbol: 'GOOGL',
+            longname: 'Alphabet Inc. (GOOGL)',
+            exchange: 'NASDAQ',
+            quoteType: 'EQUITY',
+          },
         ],
         news: [], // Assuming news is not relevant for this test
         researchReports: [],
@@ -209,7 +215,6 @@ describe('StockQuotesService', () => {
           { date: new Date('2023-01-02'), close: 101, high: 106, low: 96, volume: 1200000 },
           { date: new Date('2023-01-03'), close: 102, high: 107, low: 97, volume: 1100000 },
         ],
-
       };
 
       mockChart.mockResolvedValue(mockChartResult);
@@ -229,6 +234,7 @@ describe('StockQuotesService', () => {
     });
 
     it('should throw an error if historical data fetch fails', async () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
       const errorMessage = 'Network error';
 
       mockChart.mockRejectedValue(new Error(errorMessage));
@@ -240,8 +246,8 @@ describe('StockQuotesService', () => {
       await expect(service.getHistoricalData(ticker, fromDate, toDate)).rejects.toThrow(
         `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
       );
+
+      errorSpy.mockRestore();
     });
-
-
   });
 });

@@ -72,7 +72,7 @@ jobs:
           NPM_CONFIG_UPDATE_NOTIFIER: false
 
       - name: Run build
-        run: npm build
+        run: npm run build
         env:
           NPM_CONFIG_UPDATE_NOTIFIER: false
 

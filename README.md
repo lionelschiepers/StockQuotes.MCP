@@ -118,6 +118,12 @@ Finds ticker symbols based on company names.
 *   **Example Prompt:** "Find the ticker for 'Hims & Hers'."
 *   **Returns:** List of matching symbols and names.
 
+#### 3. `get_historical_data`
+Fetches historical stock data for a specific date range.
+
+*   **Example Prompt:** "Get AAPL historical data from 2024-01-01 to 2024-01-31."
+*   **Returns:** Array of daily prices including date, close, high, low, and volume.
+
 ## 💬 Example Interaction
 
 Here is a real-world example of how an AI assistant (like Gemini) uses this MCP server to perform data analysis:

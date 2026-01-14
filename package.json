@@ -1,12 +1,12 @@
 {
-  "name": "StockQuotes.MCP",
+  "name": "stock-quotes-mcp",
   "version": "1.0.0",
   "description": "MCP Server for fetching stock quotes from Yahoo Finance",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "StockQuotes.MCP": "dist/index.js"
+    "stock-quotes-mcp": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",

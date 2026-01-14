@@ -59,7 +59,7 @@ function parseArgs(): { transport: TransportType; httpPort?: number } {
 
       case '--version':
       case '-v':
-        console.log('mcp-server-stockquotes version 1.0.0');
+        console.log('StockQuotes.MCP version 1.0.0');
         process.exit(0);
     }
   }
@@ -96,7 +96,7 @@ Examples:
   # Start with HTTP transport on port 8080
   node dist/index.js --transport http --http-port 8080
 
-For more information, visit: https://github.com/yourusername/mcp-server-stockquotes
+For more information, visit: https://github.com/lionelschiepers/StockQuotes.MCP
 `);
 }
 

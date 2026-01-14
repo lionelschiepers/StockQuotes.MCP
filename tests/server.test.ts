@@ -132,4 +132,101 @@ describe('StockQuotesServer Refactoring', () => {
       expect(typeof server.getApp).toBe('function');
     });
   });
+
+  describe('connect method', () => {
+    it('should register tools on transport server when connecting with stdio', async () => {
+      const config = {
+        name: 'test-server',
+        version: '1.0.0',
+        transport: 'stdio' as const,
+        httpPort: 3000,
+      };
+
+      const server = new StockQuotesServer(config, mockStockService);
+      const connectSpy = jest.spyOn((server as any).transportStrategy, 'connect');
+      const getServerSpy = jest.spyOn((server as any).transportStrategy, 'getServer');
+
+      await server.connect();
+
+      expect(getServerSpy).toHaveBeenCalled();
+      expect(connectSpy).toHaveBeenCalled();
+    });
+
+    it('should register tools on transport server when connecting with http', async () => {
+      const config = {
+        name: 'test-server',
+        version: '1.0.0',
+        transport: 'http' as const,
+        httpPort: 3000,
+      };
+
+      const server = new StockQuotesServer(config, mockStockService);
+      const connectSpy = jest.spyOn((server as any).transportStrategy, 'connect');
+      const getServerSpy = jest.spyOn((server as any).transportStrategy, 'getServer');
+
+      await server.connect();
+
+      expect(getServerSpy).toHaveBeenCalled();
+      expect(connectSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('getApp method', () => {
+    it('should throw error when getApp is called on stdio transport', () => {
+      const config = {
+        name: 'test-server',
+        version: '1.0.0',
+        transport: 'stdio' as const,
+        httpPort: 3000,
+      };
+
+      const server = new StockQuotesServer(config, mockStockService);
+
+      expect(() => server.getApp()).toThrow('Express app is only available for HTTP transport');
+    });
+
+    it('should return Express app when getApp is called on http transport', () => {
+      const config = {
+        name: 'test-server',
+        version: '1.0.0',
+        transport: 'http' as const,
+        httpPort: 3000,
+      };
+
+      const server = new StockQuotesServer(config, mockStockService);
+      const mockApp = { express: 'app' };
+
+      jest.spyOn((server as any).transportStrategy, 'getApp').mockReturnValue(mockApp);
+
+      const app = server.getApp();
+      expect(app).toBe(mockApp);
+    });
+  });
+
+  describe('createServer factory function', () => {
+    it('should create a server with default config', async () => {
+      const { createServer } = await import('../src/server.js');
+      const connectSpy = jest.spyOn(StockQuotesServer.prototype, 'connect');
+
+      const server = await createServer();
+
+      expect(server).toBeInstanceOf(StockQuotesServer);
+      expect(connectSpy).toHaveBeenCalled();
+    });
+
+    it('should create a server with custom config', async () => {
+      const { createServer } = await import('../src/server.js');
+      const connectSpy = jest.spyOn(StockQuotesServer.prototype, 'connect');
+
+      const server = await createServer({
+        name: 'custom-server',
+        version: '2.0.0',
+        transport: 'stdio',
+        httpPort: 4000,
+      });
+
+      expect(server).toBeInstanceOf(StockQuotesServer);
+      expect(connectSpy).toHaveBeenCalled();
+    });
+  });
 });

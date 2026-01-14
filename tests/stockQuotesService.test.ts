@@ -159,6 +159,33 @@ describe('StockQuotesService', () => {
 
       errorSpy.mockRestore();
     });
+
+    it('should return empty map when all tickers fail', async () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      mockQuote
+        .mockRejectedValueOnce(new Error('Ticker 1 not found'))
+        .mockRejectedValueOnce(new Error('Ticker 2 not found'));
+
+      const tickers = ['INVALID1', 'INVALID2'];
+      const results = await service.getMultipleQuotes(tickers);
+
+      expect(results.size).toBe(0);
+
+      errorSpy.mockRestore();
+    });
+
+    it('should handle single ticker array', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const aaplQuote: any = { symbol: 'AAPL', regularMarketPrice: 170 };
+      mockQuote.mockResolvedValueOnce(aaplQuote);
+
+      const tickers = ['AAPL'];
+      const results = await service.getMultipleQuotes(tickers);
+
+      expect(results.size).toBe(1);
+      expect(results.get('AAPL')).toEqual(aaplQuote);
+    });
   });
 
   describe('search', () => {
@@ -204,6 +231,36 @@ describe('StockQuotesService', () => {
       expect(results).toEqual([]);
       expect(mockSearch).toHaveBeenCalledWith(query);
     });
+
+    it('should handle quotes with longname instead of shortname', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockSearchResult: any = {
+        quotes: [
+          {
+            symbol: 'GOOGL',
+            longname: 'Alphabet Inc. (GOOGL)',
+            exchange: 'NASDAQ',
+            quoteType: 'EQUITY',
+          },
+        ],
+        news: [],
+        researchReports: [],
+      };
+      mockSearch.mockResolvedValue(mockSearchResult);
+
+      const query = 'test';
+      const results = await service.search(query);
+
+      expect(results).toEqual([
+        { symbol: 'GOOGL', name: 'Alphabet Inc. (GOOGL)', exchange: 'NASDAQ' },
+      ]);
+    });
+
+    it('should handle search error', async () => {
+      mockSearch.mockRejectedValue(new Error('Search API error'));
+
+      await expect(service.search('test')).rejects.toThrow('Search API error');
+    });
   });
 
   describe('getHistoricalData', () => {
@@ -248,6 +305,23 @@ describe('StockQuotesService', () => {
       );
 
       errorSpy.mockRestore();
+    });
+
+    it('should return empty array if no historical data is available', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockChartResult: any = {
+        quotes: [],
+      };
+
+      mockChart.mockResolvedValue(mockChartResult);
+
+      const ticker = 'AAPL';
+      const fromDate = '2023-01-01';
+      const toDate = '2023-01-03';
+
+      const historicalData = await service.getHistoricalData(ticker, fromDate, toDate);
+
+      expect(historicalData).toEqual([]);
     });
   });
 });

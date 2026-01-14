@@ -51,4 +51,11 @@ export class StdioTransportStrategy implements TransportStrategy {
   getServer(): McpServer {
     return this.server;
   }
+
+  /**
+   * Close the server and cleanup resources
+   */
+  async close(): Promise<void> {
+    await this.server.close();
+  }
 }

@@ -40,6 +40,10 @@ describe('StockQuotesServer Refactoring', () => {
     mockStockService = new MockStockQuotesService(mockYahooClient);
   });
 
+  afterEach(async () => {
+    jest.clearAllMocks();
+  });
+
   describe('Transport Strategy Pattern', () => {
     it('should create stdio transport strategy', () => {
       const config = {
@@ -150,6 +154,8 @@ describe('StockQuotesServer Refactoring', () => {
 
       expect(getServerSpy).toHaveBeenCalled();
       expect(connectSpy).toHaveBeenCalled();
+
+      await server.close();
     });
 
     it('should register tools on transport server when connecting with http', async () => {
@@ -158,6 +164,7 @@ describe('StockQuotesServer Refactoring', () => {
         version: '1.0.0',
         transport: 'http' as const,
         httpPort: 3000,
+        httpHost: 'localhost',
       };
 
       const server = new StockQuotesServer(config, mockStockService);
@@ -168,6 +175,8 @@ describe('StockQuotesServer Refactoring', () => {
 
       expect(getServerSpy).toHaveBeenCalled();
       expect(connectSpy).toHaveBeenCalled();
+
+      await server.close();
     });
   });
 
@@ -191,6 +200,7 @@ describe('StockQuotesServer Refactoring', () => {
         version: '1.0.0',
         transport: 'http' as const,
         httpPort: 3000,
+        httpHost: 'localhost',
       };
 
       const server = new StockQuotesServer(config, mockStockService);
@@ -212,6 +222,8 @@ describe('StockQuotesServer Refactoring', () => {
 
       expect(server).toBeInstanceOf(StockQuotesServer);
       expect(connectSpy).toHaveBeenCalled();
+
+      await server.close();
     });
 
     it('should create a server with custom config', async () => {
@@ -227,6 +239,8 @@ describe('StockQuotesServer Refactoring', () => {
 
       expect(server).toBeInstanceOf(StockQuotesServer);
       expect(connectSpy).toHaveBeenCalled();
+
+      await server.close();
     });
   });
 });

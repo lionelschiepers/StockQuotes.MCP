@@ -1,39 +1,46 @@
 import YahooFinance from 'yahoo-finance2';
+import type { YahooChartResponse, YahooQuote, YahooSearchResponse } from './types.js';
 
 export interface YahooClient {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  quote(symbol: string, options?: object): Promise<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  search(query: string, options?: any, moduleOptions?: object): Promise<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  chart(symbol: string, options?: any, moduleOptions?: object): Promise<any>;
+  quote(symbol: string, options?: object): Promise<YahooQuote | YahooQuote[]>;
+  search(query: string, options?: unknown, moduleOptions?: object): Promise<YahooSearchResponse>;
+  chart(symbol: string, options?: unknown, moduleOptions?: object): Promise<YahooChartResponse>;
 }
 
 export class YahooFinanceClient implements YahooClient {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private client: any;
+  private client: unknown;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(client?: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  constructor(client?: unknown) {
     this.client = client ?? new YahooFinance();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  quote(symbol: string, options?: object): Promise<any> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    return this.client.quote(symbol, options);
+  async quote(symbol: string, options?: object): Promise<YahooQuote | YahooQuote[]> {
+    const result = await (this.client as { quote(s: string, o?: object): Promise<unknown> }).quote(
+      symbol,
+      options
+    );
+    return result as YahooQuote | YahooQuote[];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  search(query: string, options?: any, moduleOptions?: object): Promise<any> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    return this.client.search(query, options, moduleOptions);
+  async search(
+    query: string,
+    options?: unknown,
+    moduleOptions?: object
+  ): Promise<YahooSearchResponse> {
+    const result = await (
+      this.client as { search(q: string, o?: unknown, m?: object): Promise<unknown> }
+    ).search(query, options, moduleOptions);
+    return result as YahooSearchResponse;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  chart(symbol: string, options?: any, moduleOptions?: object): Promise<any> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    return this.client.chart(symbol, options, moduleOptions);
+  async chart(
+    symbol: string,
+    options?: unknown,
+    moduleOptions?: object
+  ): Promise<YahooChartResponse> {
+    const result = await (
+      this.client as { chart(s: string, o?: unknown, m?: object): Promise<unknown> }
+    ).chart(symbol, options, moduleOptions);
+    return result as YahooChartResponse;
   }
 }

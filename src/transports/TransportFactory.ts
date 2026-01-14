@@ -26,7 +26,8 @@ export class TransportFactory {
           config.name,
           config.version,
           stockService,
-          config.httpPort ?? 3000
+          config.httpPort ?? 3000,
+          config.httpHost ?? '0.0.0.0'
         );
       default:
         throw new Error(`Unsupported transport type: ${config.transport as string}`);

@@ -65,4 +65,66 @@ export interface ServerConfig {
   version: string;
   transport: TransportType;
   httpPort?: number;
+  httpHost?: string;
+}
+
+// Yahoo Finance API Types
+
+export interface YahooQuote {
+  symbol?: string;
+  shortName?: string;
+  longName?: string;
+  exchange?: string;
+  currency?: string;
+  regularMarketPrice?: number;
+  regularMarketChange?: number;
+  regularMarketChangePercent?: number;
+  regularMarketVolume?: number;
+  marketCap?: number;
+  fiftyTwoWeekLow?: number;
+  fiftyTwoWeekHigh?: number;
+  averageDailyVolume3Month?: number;
+  trailingPE?: number;
+  forwardPE?: number;
+  dividendYield?: number;
+  epsTrailingTwelveMonths?: number;
+  epsForward?: number;
+  bookValue?: number;
+  priceToBook?: number;
+  marketState?: string;
+  quoteType?: string;
+  [key: string]: unknown;
+}
+
+export interface YahooSearchQuote {
+  symbol?: string;
+  shortname?: string;
+  longname?: string;
+  exchange?: string;
+  [key: string]: unknown;
+}
+
+export interface YahooSearchResponse {
+  quotes?: YahooSearchQuote[];
+  [key: string]: unknown;
+}
+
+export interface YahooHistoricalQuote {
+  date?: number | Date;
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
+  adjClose?: number;
+  volume?: number;
+  [key: string]: unknown;
+}
+
+export interface YahooChartResponse {
+  quotes?: YahooHistoricalQuote[];
+  meta?: {
+    symbol?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
 }

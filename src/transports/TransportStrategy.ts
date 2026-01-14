@@ -19,4 +19,9 @@ export interface TransportStrategy {
    * Get the server instance for tool registration
    */
   getServer(): McpServer;
+
+  /**
+   * Close the server and cleanup resources
+   */
+  close(): Promise<void>;
 }

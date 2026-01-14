@@ -17,6 +17,8 @@ export class HttpTransportStrategy implements TransportStrategy {
   private serverVersion: string;
   private expressApp?: express.Application;
   private httpPort: number;
+  private httpHost: string;
+  private httpServer?: ReturnType<express.Application['listen']>;
 
   /**
    * Create a new HttpTransportStrategy instance
@@ -24,17 +26,20 @@ export class HttpTransportStrategy implements TransportStrategy {
    * @param serverVersion - Version of the server
    * @param stockService - Stock quotes service instance
    * @param httpPort - HTTP port to listen on
+   * @param httpHost - HTTP host to bind to (default: '0.0.0.0')
    */
   constructor(
     serverName: string,
     serverVersion: string,
     stockService: StockQuotesService,
-    httpPort: number
+    httpPort: number,
+    httpHost: string = '0.0.0.0'
   ) {
     this.serverName = serverName;
     this.serverVersion = serverVersion;
     this.stockService = stockService;
     this.httpPort = httpPort;
+    this.httpHost = httpHost;
     this.server = new McpServer({
       name: serverName,
       version: serverVersion,
@@ -47,10 +52,28 @@ export class HttpTransportStrategy implements TransportStrategy {
   async connect(): Promise<void> {
     this.setupExpressRoutes();
 
-    await new Promise<void>((resolve) => {
-      this.expressApp?.listen(this.httpPort, () => {
+    return new Promise<void>((resolve, reject) => {
+      this.httpServer = this.expressApp?.listen(this.httpPort);
+
+      if (!this.httpServer) {
+        reject(new Error('Failed to create HTTP server'));
+        return;
+      }
+
+      this.httpServer.on('listening', () => {
         console.log(`MCP Server running on http://localhost:${this.httpPort}/mcp`);
         resolve();
+      });
+
+      this.httpServer.on('error', (error: NodeJS.ErrnoException) => {
+        if (error.code === 'EADDRINUSE') {
+          console.error(
+            `Error: Port ${this.httpPort} is already in use. Please check if another process is using this port or specify a different port using --http-port.`
+          );
+        } else {
+          console.error(`Error starting HTTP server: ${error.message}`);
+        }
+        reject(new Error(`Failed to start HTTP server: ${error.message}`));
       });
     });
   }
@@ -59,7 +82,7 @@ export class HttpTransportStrategy implements TransportStrategy {
    * Setup Express routes for stateless Streamable HTTP transport
    */
   private setupExpressRoutes(): void {
-    this.expressApp ??= createMcpExpressApp({ host: '0.0.0.0' });
+    this.expressApp ??= createMcpExpressApp({ host: this.httpHost });
 
     // Main MCP endpoint for stateless Streamable HTTP
     this.expressApp.post('/mcp', async (req, res) => {
@@ -155,5 +178,19 @@ export class HttpTransportStrategy implements TransportStrategy {
       this.setupExpressRoutes();
     }
     return this.expressApp!;
+  }
+
+  /**
+   * Close the server and cleanup resources
+   */
+  async close(): Promise<void> {
+    await this.server.close();
+    if (this.httpServer) {
+      await new Promise<void>((resolve) => {
+        this.httpServer!.close(() => {
+          resolve();
+        });
+      });
+    }
   }
 }

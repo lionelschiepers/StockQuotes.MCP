@@ -15,11 +15,12 @@ import { createServer } from './server.js';
 import type { TransportType } from './types.js';
 
 // Parse command line arguments
-function parseArgs(): { transport: TransportType; httpPort?: number } {
+function parseArgs(): { transport: TransportType; httpPort?: number; httpHost?: string } {
   const args = process.argv.slice(2);
   const result = {
     transport: 'stdio' as TransportType,
     httpPort: 3000,
+    httpHost: '0.0.0.0',
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -48,6 +49,13 @@ function parseArgs(): { transport: TransportType; httpPort?: number } {
             console.error('Invalid HTTP port. Port must be between 1 and 65535');
             process.exit(1);
           }
+        }
+        break;
+
+      case '--http-host':
+      case '--httpHost':
+        if (i + 1 < args.length) {
+          result.httpHost = args[++i];
         }
         break;
 
@@ -83,6 +91,9 @@ Options:
   --http-port <port>
     Specify the HTTP port for HTTP transport (default: 3000)
 
+  --http-host <host>
+    Specify the HTTP host to bind to (default: 0.0.0.0)
+
   --help, -h
     Show this help message
 
@@ -95,6 +106,9 @@ Examples:
 
   # Start with HTTP transport on port 8080
   node dist/index.js --transport http --http-port 8080
+
+  # Start with HTTP transport on localhost
+  node dist/index.js --transport http --http-host localhost
 
 For more information, visit: https://github.com/lionelschiepers/StockQuotes.MCP
 `);
@@ -117,9 +131,15 @@ async function main(): Promise<void> {
       version: '1.0.0',
       transport: args.transport,
       httpPort: args.httpPort,
+      httpHost: args.httpHost,
     });
 
     console.log('Server started successfully');
+
+    if (args.transport === 'http') {
+      console.log('Press Ctrl+C to stop the server');
+      await new Promise(() => {});
+    }
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

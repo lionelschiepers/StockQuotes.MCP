@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { format } from 'date-fns';
 import type {
   HistoricalData,
   StockQuoteInput,
   StockQuoteResponse,
   StockSearchResult,
+  YahooChartResponse,
+  YahooSearchQuote,
+  YahooSearchResponse,
 } from './types.js';
 import type { YahooClient } from './yahooFinanceClient.js';
 
@@ -32,28 +31,21 @@ export class StockQuotesService {
   async getQuote(input: StockQuoteInput): Promise<StockQuoteResponse> {
     const { ticker, fields } = input;
 
-    /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
-      // Fetch quote data from Yahoo Finance
       const validFields = fields ? fields.filter((field: string) => field.length > 0) : undefined;
       const options = validFields ? { fields: validFields } : undefined;
-      const result: any = await this.yahooClient.quote(ticker, options);
+      const result = await this.yahooClient.quote(ticker, options);
 
-      // The yahoo-finance2 library can return a single quote, an array of quotes, or undefined.
-      // We need to handle all cases to ensure type safety.
       if (!result) {
         throw new Error(`Stock ticker '${ticker}' not found`);
       }
 
-      // If the result is an array, take the first element.
-      const quote: any = Array.isArray(result) ? result[0] : result;
+      const quote = Array.isArray(result) ? result[0] : result;
 
-      // After potentially taking the first element, check if the quote itself is valid.
       if (!quote) {
         throw new Error(`Stock ticker '${ticker}' not found`);
       }
 
-      // Transform the response to our interface, mapping all relevant fields.
       const response: StockQuoteResponse = {
         symbol: quote.symbol ?? ticker,
         name: quote.shortName ?? quote.longName,
@@ -78,7 +70,6 @@ export class StockQuotesService {
         quoteType: quote.quoteType,
       };
 
-      // Remove any properties that are undefined to keep the response clean.
       Object.keys(response).forEach(
         (key) =>
           response[key as keyof StockQuoteResponse] === undefined &&
@@ -87,7 +78,6 @@ export class StockQuotesService {
 
       return response;
     } catch (error) {
-      // Handle specific error cases
       if (error instanceof Error) {
         if (error.message.includes('No definition') || error.message.includes('not found')) {
           throw new Error(`Stock ticker '${ticker}' not found`);
@@ -97,8 +87,6 @@ export class StockQuotesService {
         }
       }
       throw error;
-    } finally {
-      /* eslint-enable @typescript-eslint/no-explicit-any */
     }
   }
 
@@ -115,7 +103,6 @@ export class StockQuotesService {
         const quote = await this.getQuote({ ticker });
         results.set(ticker, quote);
       } catch (error) {
-        // Log the error for the individual ticker but continue with the rest
         console.error(`Failed to fetch quote for ${ticker}:`, error);
       }
     }
@@ -129,25 +116,30 @@ export class StockQuotesService {
    * @returns Promise<Array<{symbol: string, name: string, exchange: string}>> - Search results
    */
   async search(query: string): Promise<StockSearchResult[]> {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const results: any = await this.yahooClient.search(query);
-    const quotes: any[] = results.quotes ?? []; // Explicitly type as any[]
+    const results: YahooSearchResponse = await this.yahooClient.search(query);
+    const quotes = results.quotes ?? [];
 
-    return (quotes as StockSearchResult[]) // Cast the array to StockSearchResult[] here
+    return quotes
       .filter(
-        (quote: any): quote is StockSearchResult =>
+        (
+          quote: YahooSearchQuote
+        ): quote is YahooSearchQuote & {
+          symbol: string;
+          exchange: string;
+          shortname?: string;
+          longname?: string;
+        } =>
           typeof quote.symbol === 'string' &&
           typeof quote.exchange === 'string' &&
           (typeof quote.shortname === 'string' || typeof quote.longname === 'string')
       )
       .map(
-        (result: any): StockSearchResult => ({
+        (result): StockSearchResult => ({
           symbol: result.symbol,
           name: result.shortname ?? result.longname ?? '',
           exchange: result.exchange,
         })
       );
-    /* eslint-enable @typescript-eslint/no-explicit-any */
   }
 
   /**
@@ -162,15 +154,15 @@ export class StockQuotesService {
     fromDate: string,
     toDate: string
   ): Promise<HistoricalData[]> {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
     try {
-      const chart: any = await this.yahooClient.chart(ticker, {
+      const chart: YahooChartResponse = await this.yahooClient.chart(ticker, {
         period1: fromDate,
         period2: toDate,
       });
       const historicalData: HistoricalData[] = [];
 
-      for (const quote of chart.quotes) {
+      const quotes = chart.quotes ?? [];
+      for (const quote of quotes) {
         if (quote.date && quote.close && quote.high && quote.low && quote.volume) {
           historicalData.push({
             date: format(new Date(quote.date), 'yyyy-MM-dd'),
@@ -188,8 +180,6 @@ export class StockQuotesService {
       throw new Error(
         `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
       );
-    } finally {
-      /* eslint-enable @typescript-eslint/no-explicit-any */
     }
   }
 }

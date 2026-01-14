@@ -69,23 +69,47 @@ describe('HttpTransportStrategy', () => {
 
   describe('connect', () => {
     it('should setup routes and start listening', async () => {
-      const listenMock = jest.fn().mockImplementation((port, callback) => {
-        callback();
-        return mockExpressApp;
+      let listeningCallback: (() => void) | null = null;
+      const listenMock = jest.fn().mockImplementation((port) => {
+        setTimeout(() => {
+          if (listeningCallback) {
+            listeningCallback();
+          }
+        }, 0);
+        return {
+          ...mockExpressApp,
+          on: jest.fn().mockImplementation((event: string, callback: () => void) => {
+            if (event === 'listening') {
+              listeningCallback = callback;
+            }
+          }),
+        };
       });
       mockExpressApp.listen = listenMock;
       createStrategy();
 
       await strategy.connect();
 
-      expect(listenMock).toHaveBeenCalledWith(3000, expect.any(Function));
+      expect(listenMock).toHaveBeenCalledWith(3000);
     });
 
     it('should log the correct message when connected', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      const listenMock = jest.fn().mockImplementation((port, callback) => {
-        callback();
-        return mockExpressApp;
+      let listeningCallback: (() => void) | null = null;
+      const listenMock = jest.fn().mockImplementation((port) => {
+        setTimeout(() => {
+          if (listeningCallback) {
+            listeningCallback();
+          }
+        }, 0);
+        return {
+          ...mockExpressApp,
+          on: jest.fn().mockImplementation((event: string, callback: () => void) => {
+            if (event === 'listening') {
+              listeningCallback = callback;
+            }
+          }),
+        };
       });
       mockExpressApp.listen = listenMock;
       createStrategy();
@@ -161,6 +185,7 @@ describe('HttpTransportStrategy', () => {
     });
 
     it('should return 500 error on exception during request handling', async () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
       mockStreamableTransport.handleRequest.mockImplementation(() => {
         throw new Error('Test error');
       });
@@ -176,6 +201,7 @@ describe('HttpTransportStrategy', () => {
         },
         id: null,
       });
+      errorSpy.mockRestore();
     });
 
     it('should log error when request handling fails', async () => {

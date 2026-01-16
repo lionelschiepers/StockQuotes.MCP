@@ -99,7 +99,7 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     permissions:
-      security-events: read
+      security-events: write
 
     if: github.ref == 'refs/heads/main'
     steps:

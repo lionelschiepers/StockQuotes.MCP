@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/lionelschiepers/StockQuotes.MCP/actions/workflows/build.yml/badge.svg)](https://github.com/lionelschiepers/StockQuotes.MCP/actions/workflows/build.yml)
 [![Code Coverage](https://codecov.io/github/lionelschiepers/StockQuotes.MCP/graph/badge.svg?token=GSD4M589HB)](https://codecov.io/github/lionelschiepers/StockQuotes.MCP)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lionelschiepers_StockQuotes.MCP&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=lionelschiepers_StockQuotes.MCP)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io/)

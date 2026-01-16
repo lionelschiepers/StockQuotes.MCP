@@ -115,3 +115,13 @@ jobs:
           context: .
           push: true
           tags: lionelschiepers/stockquote-mcp:latest
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'lionelschiepers/stockquote-mcp:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'

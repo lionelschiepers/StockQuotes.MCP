@@ -59,7 +59,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
@@ -86,16 +85,6 @@ jobs:
         run: npm ci
         env:
           NPM_CONFIG_UPDATE_NOTIFIER: false
-
-#      - name: Run build
-#        run: npm run build
-#        env:
-#          NPM_CONFIG_UPDATE_NOTIFIER: false
-
-#      - name: Run tests
-#        run: npm test
-#        env:
-#          NPM_CONFIG_UPDATE_NOTIFIER: false
 
       - name: Publish to npm
         run: npm publish --provenance
@@ -126,6 +115,52 @@ jobs:
           push: true
           tags: lionelschiepers/stockquote-mcp:latest
 
+      - name: Docker Scout Quickview
+        uses: docker/scout-action@v1
+        if: github.ref == 'refs/heads/main'
+        with:
+          command: quickview
+          image: lionelschiepers/stockquote-mcp:latest
+
+      - name: Docker Scout CVEs with SARIF output
+        uses: docker/scout-action@v1
+        if: github.ref == 'refs/heads/main'
+        with:
+          command: cves
+          image: lionelschiepers/stockquote-mcp:latest
+          sarif-file: report.sarif
+          only-fixed: true
+          ignore-base: false
+          only-severities: 'critical,high,medium'
+
+      - name: Docker Scout SBOM
+        uses: docker/scout-action@v1
+        if: github.ref == 'refs/heads/main'
+        with:
+          command: sbom
+          image: lionelschiepers/stockquote-mcp:latest
+          output: sbom.json
+
+      - name: Docker Scout Recommendations
+        uses: docker/scout-action@v1
+        if: github.ref == 'refs/heads/main'
+        with:
+          command: recommendations
+          image: lionelschiepers/stockquote-mcp:latest
+
+      - name: Publish SARIF Report as artifact
+        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: sarif-report
+          path: report.sarif
+
+      - name: Upload Docker Scout SARIF Report
+        uses: github/codeql-action/upload-sarif@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          sarif_file: report.sarif
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -133,6 +168,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
+
       - name: Upload Trivy SARIF Report
         uses: github/codeql-action/upload-sarif@v4
         if: github.ref == 'refs/heads/main'

@@ -1,7 +1,20 @@
 {
   "name": "stock-quotes-mcp",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "MCP Server for fetching stock quotes from Yahoo Finance",
+  "author": "Lionel Schiepers <lionel_schiepers@hotmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lionelschiepers/StockQuotes.MCP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lionelschiepers/StockQuotes.MCP/issues"
+  },
+  "homepage": "https://github.com/lionelschiepers/StockQuotes.MCP#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "dist/index.js",
   "files": [
@@ -37,21 +50,11 @@
     "stock-quotes",
     "yahoo-finance",
     "mcp-server",
-    "ai-tools"
+    "ai-tools",
+    "financial data",
+    "finance",
+    "api"
   ],
-  "author": "Lionel Schiepers <lionel_schiepers@hotmail.com>",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lionelschiepers/StockQuotes.MCP.git"
-  },
-  "bugs": {
-    "url": "https://github.com/lionelschiepers/StockQuotes.MCP/issues"
-  },
-  "homepage": "https://github.com/lionelschiepers/StockQuotes.MCP#readme",
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.2",
     "date-fns": "^4.1.0",

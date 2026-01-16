@@ -64,7 +64,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-#    if: github.ref == 'refs/heads/main'
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout repository

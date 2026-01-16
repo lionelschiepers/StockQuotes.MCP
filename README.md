@@ -52,7 +52,17 @@ It transforms your AI from a static text generator into a dynamic financial anal
 
 ## ⚡ Quick Start
 
-For those who want to get up and running immediately:
+The fastest way to run the server is using `npx`:
+
+```bash
+# Start in Stdio Mode (default for most MCP clients)
+npx stockquotes-mcp --transport stdio
+
+# Start as an HTTP/SSE Server
+npx stockquotes-mcp --transport http
+```
+
+Alternatively, for local development:
 
 ```bash
 # Clone and Install
@@ -60,10 +70,8 @@ git clone https://github.com/lionelschiepers/StockQuotes.MCP.git
 cd StockQuotes.MCP
 npm install
 
-# Build
+# Build and Start
 npm run build
-
-# Start (Stdio Mode - default for most MCP clients)
 npm run start:stdio
 ```
 
@@ -161,8 +169,8 @@ To use with [Cline](https://github.com/cline/cline), add this to your MCP settin
 {
   "mcpServers": {
     "stock-quotes": {
-      "command": "node",
-      "args": ["/absolute/path/to/StockQuotes.MCP/dist/index.js", "--transport", "stdio"],
+      "command": "npx",
+      "args": ["-y", "stockquotes-mcp", "--transport", "stdio"],
       "disabled": false,
       "autoApprove": []
     }
@@ -172,11 +180,11 @@ To use with [Cline](https://github.com/cline/cline), add this to your MCP settin
 
 ### Gemini CLI
 
-Integrate with the Gemini CLI tool using one of these methods:
+Integrate with the Gemini CLI tool:
 
 **Method 1: Direct Command**
 ```bash
-gemini mcp add stock-quotes node "C:\Path\To\StockQuotes.MCP\dist\index.js --transport stdio"
+gemini mcp add stock-quotes npx "-y stockquotes-mcp --transport stdio"
 ```
 
 **Method 2: Settings Configuration**
@@ -187,9 +195,10 @@ Edit your `~/.gemini/settings.json`:
 {
   "mcpServers": {
     "stock-quotes": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "./dist/index.js", 
+        "-y",
+        "stockquotes-mcp", 
         "--transport",
         "stdio"
       ]

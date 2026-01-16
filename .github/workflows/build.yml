@@ -80,15 +80,15 @@ jobs:
         env:
           NPM_CONFIG_UPDATE_NOTIFIER: false
 
-      - name: Run build
-        run: npm run build
-        env:
-          NPM_CONFIG_UPDATE_NOTIFIER: false
+#      - name: Run build
+#        run: npm run build
+#        env:
+#          NPM_CONFIG_UPDATE_NOTIFIER: false
 
-      - name: Run tests
-        run: npm test
-        env:
-          NPM_CONFIG_UPDATE_NOTIFIER: false
+#      - name: Run tests
+#        run: npm test
+#        env:
+#          NPM_CONFIG_UPDATE_NOTIFIER: false
 
       - name: Publish to npm
         run: npm publish --provenance

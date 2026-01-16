@@ -1,5 +1,5 @@
 {
-  "name": "stock-quotes-mcp",
+  "name": "stockquotes-mcp",
   "version": "1.0.3",
   "description": "MCP Server for fetching stock quotes from Yahoo Finance",
   "author": "Lionel Schiepers <lionel_schiepers@hotmail.com>",

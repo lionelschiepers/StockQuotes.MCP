@@ -119,6 +119,75 @@ describe('HttpTransportStrategy', () => {
       expect(consoleSpy).toHaveBeenCalledWith('MCP Server running on http://localhost:3000/mcp');
       consoleSpy.mockRestore();
     });
+
+    it('should reject if http server fails to start', async () => {
+      const listenMock = jest.fn().mockReturnValue(undefined);
+      mockExpressApp.listen = listenMock;
+      createStrategy();
+
+      await expect(strategy.connect()).rejects.toThrow('Failed to create HTTP server');
+    });
+
+    it('should handle EADDRINUSE error', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      let errorCallback: ((error: any) => void) | null = null;
+
+      const listenMock = jest.fn().mockImplementation((port) => {
+        setTimeout(() => {
+          if (errorCallback) {
+            const error: any = new Error('Address in use');
+            error.code = 'EADDRINUSE';
+            errorCallback(error);
+          }
+        }, 0);
+        return {
+          on: jest.fn().mockImplementation((event: string, callback: any) => {
+            if (event === 'error') {
+              errorCallback = callback;
+            }
+          }),
+        };
+      });
+      mockExpressApp.listen = listenMock;
+      createStrategy();
+
+      await expect(strategy.connect()).rejects.toThrow(
+        'Failed to start HTTP server: Address in use'
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Port 3000 is already in use')
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle generic server errors', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      let errorCallback: ((error: any) => void) | null = null;
+
+      const listenMock = jest.fn().mockImplementation((port) => {
+        setTimeout(() => {
+          if (errorCallback) {
+            const error = new Error('Generic error');
+            errorCallback(error);
+          }
+        }, 0);
+        return {
+          on: jest.fn().mockImplementation((event: string, callback: any) => {
+            if (event === 'error') {
+              errorCallback = callback;
+            }
+          }),
+        };
+      });
+      mockExpressApp.listen = listenMock;
+      createStrategy();
+
+      await expect(strategy.connect()).rejects.toThrow('Failed to start HTTP server: Generic error');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Error starting HTTP server: Generic error')
+      );
+      consoleSpy.mockRestore();
+    });
   });
 
   describe('setupExpressRoutes', () => {

@@ -128,6 +128,46 @@ describe('StockQuotesService', () => {
       expect(quote.symbol).toBe('GOOG');
       expect(quote.name).toBe('Alphabet Inc. (GOOG)');
     });
+
+    it('should remove undefined fields from response', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockQuoteResult: any = {
+        symbol: 'TEST',
+        shortName: 'Test Inc.',
+        // Missing optional fields like regularMarketChange
+      };
+      mockQuote.mockResolvedValue(mockQuoteResult);
+
+      const ticker = 'TEST';
+      const quote = await service.getQuote({ ticker });
+
+      expect(quote.symbol).toBe('TEST');
+      expect(quote.name).toBe('Test Inc.');
+      expect(quote).not.toHaveProperty('regularMarketChange');
+      expect(quote).not.toHaveProperty('dividendYield');
+    });
+
+    it('should throw rate limit error', async () => {
+      mockQuote.mockRejectedValue(new Error('Some rate limit error occurred'));
+      await expect(service.getQuote({ ticker: 'AAPL' })).rejects.toThrow(
+        'Rate limit exceeded. Please try again later'
+      );
+    });
+
+    it('should throw generic error', async () => {
+      mockQuote.mockRejectedValue(new Error('Generic failure'));
+      await expect(service.getQuote({ ticker: 'AAPL' })).rejects.toThrow('Generic failure');
+    });
+
+    it('should filter empty fields', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockQuoteResult: any = { symbol: 'AAPL' };
+      mockQuote.mockResolvedValue(mockQuoteResult);
+
+      await service.getQuote({ ticker: 'AAPL', fields: ['field1', '', 'field2'] });
+
+      expect(mockQuote).toHaveBeenCalledWith('AAPL', { fields: ['field1', 'field2'] });
+    });
   });
 
   describe('getMultipleQuotes', () => {
@@ -156,6 +196,11 @@ describe('StockQuotesService', () => {
         regularMarketPrice: 250,
       });
       expect(results.has('NONEXISTENT')).toBe(false);
+      
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to fetch quote for NONEXISTENT:',
+        expect.any(Error)
+      );
 
       errorSpy.mockRestore();
     });

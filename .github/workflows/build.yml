@@ -98,6 +98,9 @@ jobs:
 
   docker-build:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: read
+
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository

@@ -53,6 +53,13 @@ jobs:
         env:
           NPM_CONFIG_UPDATE_NOTIFIER: false
 
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        if: github.ref == 'refs/heads/main'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:

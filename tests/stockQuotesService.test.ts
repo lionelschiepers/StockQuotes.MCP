@@ -287,7 +287,7 @@ describe('StockQuotesService', () => {
         { date: '2023-01-02', close: 101, high: 106, low: 96, volume: 1200000 },
         { date: '2023-01-03', close: 102, high: 107, low: 97, volume: 1100000 },
       ]);
-      expect(mockChart).toHaveBeenCalledWith(ticker, { period1: fromDate, period2: toDate });
+      expect(mockChart).toHaveBeenCalledWith(ticker, { period1: fromDate, period2: '2023-01-04' });
     });
 
     it('should throw an error if historical data fetch fails', async () => {

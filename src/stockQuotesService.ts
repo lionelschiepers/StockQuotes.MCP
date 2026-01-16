@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { addDays, format, parseISO } from 'date-fns';
 import type {
   HistoricalData,
   StockQuoteInput,
@@ -155,9 +155,13 @@ export class StockQuotesService {
     toDate: string
   ): Promise<HistoricalData[]> {
     try {
+      // Yahoo Finance treats period2 as exclusive, so we add 1 day to include the end date
+      const toDateObj = parseISO(toDate);
+      const period2 = format(addDays(toDateObj, 1), 'yyyy-MM-dd');
+
       const chart: YahooChartResponse = await this.yahooClient.chart(ticker, {
         period1: fromDate,
-        period2: toDate,
+        period2,
       });
       const historicalData: HistoricalData[] = [];
 

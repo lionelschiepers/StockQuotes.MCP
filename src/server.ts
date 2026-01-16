@@ -14,9 +14,9 @@ type HttpTransportStrategy = TransportStrategy & {
  * MCP Server for Stock Quotes using Yahoo Finance
  */
 export class StockQuotesServer {
-  private config: ServerConfig;
-  private stockService: StockQuotesService;
-  private transportStrategy: TransportStrategy;
+  private readonly config: ServerConfig;
+  private readonly stockService: StockQuotesService;
+  private readonly transportStrategy: TransportStrategy;
 
   /**
    * Create a new instance of the StockQuotesServer

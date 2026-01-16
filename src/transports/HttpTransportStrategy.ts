@@ -11,13 +11,13 @@ import type { TransportStrategy } from './TransportStrategy.js';
  * Handles connection via HTTP transport
  */
 export class HttpTransportStrategy implements TransportStrategy {
-  private server: McpServer;
-  private stockService: StockQuotesService;
-  private serverName: string;
-  private serverVersion: string;
+  private readonly server: McpServer;
+  private readonly stockService: StockQuotesService;
+  private readonly serverName: string;
+  private readonly serverVersion: string;
   private expressApp?: express.Application;
-  private httpPort: number;
-  private httpHost: string;
+  private readonly httpPort: number;
+  private readonly httpHost: string;
   private httpServer?: ReturnType<express.Application['listen']>;
 
   /**

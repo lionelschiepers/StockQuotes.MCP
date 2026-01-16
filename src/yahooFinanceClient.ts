@@ -8,7 +8,7 @@ export interface YahooClient {
 }
 
 export class YahooFinanceClient implements YahooClient {
-  private client: unknown;
+  private readonly client: unknown;
 
   constructor(client?: unknown) {
     this.client = client ?? new YahooFinance();

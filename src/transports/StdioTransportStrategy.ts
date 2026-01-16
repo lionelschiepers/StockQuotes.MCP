@@ -8,10 +8,10 @@ import type { TransportStrategy } from './TransportStrategy.js';
  * Handles connection via stdio transport
  */
 export class StdioTransportStrategy implements TransportStrategy {
-  private server: McpServer;
-  private stockService: StockQuotesService;
-  private serverName: string;
-  private serverVersion: string;
+  private readonly server: McpServer;
+  private readonly stockService: StockQuotesService;
+  private readonly serverName: string;
+  private readonly serverVersion: string;
 
   /**
    * Create a new StdioTransportStrategy instance

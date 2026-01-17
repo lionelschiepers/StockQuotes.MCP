@@ -32,6 +32,8 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+      - name: npm audit
+        run: npm audit --audit-level=high
       - name: Restore cache
         uses: actions/cache@v4
         with:

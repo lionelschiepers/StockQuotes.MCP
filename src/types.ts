@@ -11,8 +11,28 @@ export const StockQuoteSchema = z.object({
   fields: z.array(z.string()).optional().describe('Optional list of specific fields to return'),
 });
 
+// Schema for stock search tool input
+export const StockSearchSchema = z.object({
+  query: z.string().min(1).describe('Search query (company name or ticker)'),
+});
+
+// Schema for historical data tool input
+export const HistoricalDataSchema = z.object({
+  ticker: z.string().min(1).max(10).toUpperCase().describe('Stock ticker symbol (e.g., AAPL)'),
+  fromDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .describe('Start date in YYYY-MM-DD format'),
+  toDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .describe('End date in YYYY-MM-DD format'),
+});
+
 // Type for stock quote tool input
 export type StockQuoteInput = z.infer<typeof StockQuoteSchema>;
+export type StockSearchInput = z.infer<typeof StockSearchSchema>;
+export type HistoricalDataInput = z.infer<typeof HistoricalDataSchema>;
 
 // Interface for stock quote response
 export interface StockQuoteResponse {

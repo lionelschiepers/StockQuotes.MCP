@@ -1,28 +1,23 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { logger } from '../logger.js';
 import type { StockQuotesService } from '../stockQuotesService.js';
 import type { TransportStrategy } from './TransportStrategy.js';
 
 /**
- * Stdio Transport Strategy
+ * Standard I/O Transport Strategy
  * Handles connection via stdio transport
  */
 export class StdioTransportStrategy implements TransportStrategy {
   private readonly server: McpServer;
-  private readonly stockService: StockQuotesService;
-  private readonly serverName: string;
-  private readonly serverVersion: string;
 
   /**
    * Create a new StdioTransportStrategy instance
    * @param serverName - Name of the server
    * @param serverVersion - Version of the server
-   * @param stockService - Stock quotes service instance
+   * @param _stockService - Stock quotes service instance (not used in this strategy but required by interface)
    */
-  constructor(serverName: string, serverVersion: string, stockService: StockQuotesService) {
-    this.serverName = serverName;
-    this.serverVersion = serverVersion;
-    this.stockService = stockService;
+  constructor(serverName: string, serverVersion: string, _stockService: StockQuotesService) {
     this.server = new McpServer({
       name: serverName,
       version: serverVersion,
@@ -35,7 +30,7 @@ export class StdioTransportStrategy implements TransportStrategy {
   async connect(): Promise<void> {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.log('MCP Server connected via stdio transport');
+    logger.info('MCP Server connected via stdio transport');
   }
 
   /**

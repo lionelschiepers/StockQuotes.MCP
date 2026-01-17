@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { logger } from './logger.js';
 import type { StockQuotesService } from './stockQuotesService.js';
+import { HistoricalDataSchema, StockQuoteSchema, StockSearchSchema } from './types.js';
 
 /**
  * Register all MCP tools on a server instance
@@ -16,16 +17,10 @@ export function registerToolsOnServer(server: McpServer, stockService: StockQuot
         'Fetch current stock quote data from Yahoo Finance for a given ticker symbol. ' +
         'Returns price, volume, market cap, P/E ratio, 52-week range, and other key metrics. ' +
         'Supports stocks, ETFs, cryptocurrencies, and other financial instruments.',
-      inputSchema: z.object({
-        ticker: z.string().min(1).max(10).describe('Stock ticker symbol (e.g., AAPL, GOOGL, MSFT)'),
-        fields: z
-          .array(z.string())
-          .optional()
-          .describe('Optional list of specific fields to return'),
-      }),
+      inputSchema: StockQuoteSchema,
     },
-    async ({ ticker, fields }: { ticker: string; fields?: string[] }) => {
-      console.log(`Fetching stock quote for ticker: ${ticker}`);
+    async ({ ticker, fields }) => {
+      logger.info('Fetching stock quote', { ticker, fields });
       const quote = await stockService.getQuote({ ticker, fields });
 
       return {
@@ -47,12 +42,10 @@ export function registerToolsOnServer(server: McpServer, stockService: StockQuot
       description:
         'Search for stocks by company name or ticker symbol. ' +
         'Returns matching results with symbol, name, and exchange information.',
-      inputSchema: z.object({
-        query: z.string().min(1).describe('Search query (company name or ticker)'),
-      }),
+      inputSchema: StockSearchSchema,
     },
-    async ({ query }: { query: string }) => {
-      console.log(`Searching stocks with query: ${query}`);
+    async ({ query }) => {
+      logger.info('Searching stocks', { query });
       const results = await stockService.search(query);
 
       return {
@@ -73,20 +66,10 @@ export function registerToolsOnServer(server: McpServer, stockService: StockQuot
       title: 'Get Historical Data for a TICKER',
       description:
         'Fetch historical stock data for a given ticker, from a start date to an end date. Returns an array of closing prices for each day.',
-      inputSchema: z.object({
-        ticker: z.string().min(1).max(10).describe('Stock ticker symbol (e.g., AAPL)'),
-        fromDate: z
-          .string()
-          .regex(/^\d{4}-\d{2}-\d{2}$/)
-          .describe('Start date in YYYY-MM-DD format'),
-        toDate: z
-          .string()
-          .regex(/^\d{4}-\d{2}-\d{2}$/)
-          .describe('End date in YYYY-MM-DD format'),
-      }),
+      inputSchema: HistoricalDataSchema,
     },
-    async ({ ticker, fromDate, toDate }: { ticker: string; fromDate: string; toDate: string }) => {
-      console.log(`Fetching historical data for ${ticker} from ${fromDate} to ${toDate}`);
+    async ({ ticker, fromDate, toDate }) => {
+      logger.info('Fetching historical data', { ticker, fromDate, toDate });
       const closingPrices = await stockService.getHistoricalData(ticker, fromDate, toDate);
       return {
         content: [

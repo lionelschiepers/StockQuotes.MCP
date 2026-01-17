@@ -1,10 +1,15 @@
-/**
- * Unit tests for StockQuotesService
- */
-
-import type { YahooClient } from '../src/yahooFinanceClient.js';
 import { StockQuotesService } from '../src/stockQuotesService.js';
-import { HistoricalData, StockQuoteResponse, StockSearchResult } from '../src/types.js';
+import { logger } from '../src/logger.js';
+import type { YahooClient } from '../src/yahooFinanceClient.js';
+
+// Mock logger
+jest.mock('../src/logger.js', () => ({
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
 // Mock the yahoo-finance2 module globally for this test file
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -172,7 +177,6 @@ describe('StockQuotesService', () => {
 
   describe('getMultipleQuotes', () => {
     it('should fetch multiple stock quotes and handle errors gracefully', async () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const aaplQuote: any = { symbol: 'AAPL', regularMarketPrice: 170 };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,17 +201,13 @@ describe('StockQuotesService', () => {
       });
       expect(results.has('NONEXISTENT')).toBe(false);
       
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Failed to fetch quote for NONEXISTENT:',
-        expect.any(Error)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to fetch quote for NONEXISTENT',
+        expect.objectContaining({ ticker: 'NONEXISTENT', error: expect.any(Error) })
       );
-
-      errorSpy.mockRestore();
     });
 
     it('should return empty map when all tickers fail', async () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
-
       mockQuote
         .mockRejectedValueOnce(new Error('Ticker 1 not found'))
         .mockRejectedValueOnce(new Error('Ticker 2 not found'));
@@ -216,8 +216,6 @@ describe('StockQuotesService', () => {
       const results = await service.getMultipleQuotes(tickers);
 
       expect(results.size).toBe(0);
-
-      errorSpy.mockRestore();
     });
 
     it('should handle single ticker array', async () => {
@@ -336,7 +334,6 @@ describe('StockQuotesService', () => {
     });
 
     it('should throw an error if historical data fetch fails', async () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
       const errorMessage = 'Network error';
 
       mockChart.mockRejectedValue(new Error(errorMessage));
@@ -349,7 +346,10 @@ describe('StockQuotesService', () => {
         `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
       );
 
-      errorSpy.mockRestore();
+      expect(logger.error).toHaveBeenCalledWith(
+        `Error fetching historical data for ${ticker}`,
+        expect.objectContaining({ ticker, error: expect.any(Error) })
+      );
     });
 
     it('should return empty array if no historical data is available', async () => {

@@ -12,6 +12,7 @@
  */
 
 import { createServer } from './server.js';
+import { logger } from './logger.js';
 import type { TransportType } from './types.js';
 
 // Parse command line arguments
@@ -34,8 +35,7 @@ function parseArgs(): { transport: TransportType; httpPort?: number; httpHost?: 
           if (['stdio', 'http'].includes(transport)) {
             result.transport = transport;
           } else {
-            console.error(`Invalid transport: ${transport}`);
-            console.error('Valid transports: stdio, http');
+            logger.error(`Invalid transport: ${transport}`);
             process.exit(1);
           }
         }
@@ -46,7 +46,7 @@ function parseArgs(): { transport: TransportType; httpPort?: number; httpHost?: 
         if (i + 1 < args.length) {
           result.httpPort = Number.parseInt(args[++i], 10);
           if (Number.isNaN(result.httpPort) || result.httpPort <= 0 || result.httpPort > 65535) {
-            console.error('Invalid HTTP port. Port must be between 1 and 65535');
+            logger.error('Invalid HTTP port. Port must be between 1 and 65535');
             process.exit(1);
           }
         }
@@ -67,7 +67,7 @@ function parseArgs(): { transport: TransportType; httpPort?: number; httpHost?: 
 
       case '--version':
       case '-v':
-        console.log('StockQuotes.MCP version 1.0.0');
+        console.log('StockQuotes.MCP version 1.0.4');
         process.exit(0);
     }
   }
@@ -118,47 +118,49 @@ For more information, visit: https://github.com/lionelschiepers/StockQuotes.MCP
  * Main function to start the server
  */
 async function main(): Promise<void> {
-  console.log('MCP Stock Quotes Server');
-  console.log('========================');
+  logger.info('MCP Stock Quotes Server starting');
 
   const args = parseArgs();
 
-  console.log(`Starting server with ${args.transport} transport...`);
+  logger.info(`Starting server with ${args.transport} transport...`, {
+    transport: args.transport,
+    port: args.httpPort,
+    host: args.httpHost,
+  });
 
   try {
     await createServer({
       name: 'stock-quotes-server',
-      version: '1.0.0',
+      version: '1.0.4',
       transport: args.transport,
       httpPort: args.httpPort,
       httpHost: args.httpHost,
     });
 
-    console.log('Server started successfully');
+    logger.info('Server started successfully');
 
     if (args.transport === 'http') {
-      console.log('Press Ctrl+C to stop the server');
       await new Promise(() => {});
     }
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server', { error });
     process.exit(1);
   }
 }
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\nShutting down server...');
+  logger.info('Shutting down server...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log('\nShutting down server...');
+  logger.info('Shutting down server...');
   process.exit(0);
 });
 
 // Start the server
-main().catch((error) => {
-  console.error('Unhandled error:', error);
+main().catch((error: unknown) => {
+  logger.error('Unhandled error', { error });
   process.exit(1);
 });

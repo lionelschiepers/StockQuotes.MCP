@@ -1,4 +1,7 @@
 import { addDays, format, parseISO } from 'date-fns';
+import NodeCache from 'node-cache';
+import { NotFoundError, RateLimitError } from './errors.js';
+import { logger } from './logger.js';
 import type {
   HistoricalData,
   StockQuoteInput,
@@ -15,12 +18,15 @@ import type { YahooClient } from './yahooFinanceClient.js';
  */
 export class StockQuotesService {
   private readonly yahooClient: YahooClient;
+  private readonly cache: NodeCache;
 
   /**
    * Create a new instance of the StockQuotesService
    */
   constructor(yahooClient: YahooClient) {
     this.yahooClient = yahooClient;
+    // Cache for 5 minutes by default, check for expired keys every 60 seconds
+    this.cache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
   }
 
   /**
@@ -30,6 +36,13 @@ export class StockQuotesService {
    */
   async getQuote(input: StockQuoteInput): Promise<StockQuoteResponse> {
     const { ticker, fields } = input;
+    const cacheKey = `quote_${ticker}_${fields?.join(',') ?? 'all'}`;
+
+    const cachedResponse = this.cache.get<StockQuoteResponse>(cacheKey);
+    if (cachedResponse) {
+      logger.debug('Cache hit for stock quote', { ticker, cacheKey });
+      return cachedResponse;
+    }
 
     try {
       const validFields = fields ? fields.filter((field: string) => field.length > 0) : undefined;
@@ -37,13 +50,13 @@ export class StockQuotesService {
       const result = await this.yahooClient.quote(ticker, options);
 
       if (!result) {
-        throw new Error(`Stock ticker '${ticker}' not found`);
+        throw new NotFoundError(`Stock ticker '${ticker}' not found`);
       }
 
       const quote = Array.isArray(result) ? result[0] : result;
 
       if (!quote) {
-        throw new Error(`Stock ticker '${ticker}' not found`);
+        throw new NotFoundError(`Stock ticker '${ticker}' not found`);
       }
 
       const response: StockQuoteResponse = {
@@ -76,14 +89,15 @@ export class StockQuotesService {
           delete response[key as keyof StockQuoteResponse]
       );
 
+      this.cache.set(cacheKey, response);
       return response;
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('No definition') || error.message.includes('not found')) {
-          throw new Error(`Stock ticker '${ticker}' not found`);
+          throw new NotFoundError(`Stock ticker '${ticker}' not found`);
         }
         if (error.message.includes('rate limit')) {
-          throw new Error('Rate limit exceeded. Please try again later');
+          throw new RateLimitError();
         }
       }
       throw error;
@@ -103,7 +117,7 @@ export class StockQuotesService {
         const quote = await this.getQuote({ ticker });
         results.set(ticker, quote);
       } catch (error) {
-        console.error(`Failed to fetch quote for ${ticker}:`, error);
+        logger.error(`Failed to fetch quote for ${ticker}`, { ticker, error });
       }
     }
 
@@ -116,10 +130,18 @@ export class StockQuotesService {
    * @returns Promise<Array<{symbol: string, name: string, exchange: string}>> - Search results
    */
   async search(query: string): Promise<StockSearchResult[]> {
+    const cacheKey = `search_${query}`;
+    const cachedResults = this.cache.get<StockSearchResult[]>(cacheKey);
+
+    if (cachedResults) {
+      logger.debug('Cache hit for search', { query, cacheKey });
+      return cachedResults;
+    }
+
     const results: YahooSearchResponse = await this.yahooClient.search(query);
     const quotes = results.quotes ?? [];
 
-    return quotes
+    const searchResults = quotes
       .filter(
         (
           quote: YahooSearchQuote
@@ -140,6 +162,10 @@ export class StockQuotesService {
           exchange: result.exchange,
         })
       );
+
+    // Cache search results for 30 minutes
+    this.cache.set(cacheKey, searchResults, 1800);
+    return searchResults;
   }
 
   /**
@@ -180,8 +206,8 @@ export class StockQuotesService {
 
       return historicalData;
     } catch (error) {
-      console.error(`Error fetching historical data for ${ticker}:`, error);
-      throw new Error(
+      logger.error(`Error fetching historical data for ${ticker}`, { ticker, error });
+      throw new NotFoundError(
         `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
       );
     }

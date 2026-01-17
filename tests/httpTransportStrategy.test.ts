@@ -8,10 +8,20 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import express from 'express';
 import supertest from 'supertest';
 import { HttpTransportStrategy } from '../src/transports/HttpTransportStrategy.js';
+import { logger } from '../src/logger.js';
 
 jest.mock('@modelcontextprotocol/sdk/server/express.js');
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
 jest.mock('@modelcontextprotocol/sdk/server/streamableHttp.js');
+
+// Mock logger
+jest.mock('../src/logger.js', () => ({
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
 describe('HttpTransportStrategy', () => {
   let mockStockService: any;
@@ -94,7 +104,6 @@ describe('HttpTransportStrategy', () => {
     });
 
     it('should log the correct message when connected', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
       let listeningCallback: (() => void) | null = null;
       const listenMock = jest.fn().mockImplementation((port) => {
         setTimeout(() => {
@@ -116,8 +125,7 @@ describe('HttpTransportStrategy', () => {
 
       await strategy.connect();
 
-      expect(consoleSpy).toHaveBeenCalledWith('MCP Server running on http://localhost:3000/mcp');
-      consoleSpy.mockRestore();
+      expect(logger.info).toHaveBeenCalledWith('MCP Server running on http://localhost:3000/mcp');
     });
 
     it('should reject if http server fails to start', async () => {
@@ -129,7 +137,6 @@ describe('HttpTransportStrategy', () => {
     });
 
     it('should handle EADDRINUSE error', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       let errorCallback: ((error: any) => void) | null = null;
 
       const listenMock = jest.fn().mockImplementation((port) => {
@@ -154,14 +161,13 @@ describe('HttpTransportStrategy', () => {
       await expect(strategy.connect()).rejects.toThrow(
         'Failed to start HTTP server: Address in use'
       );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Port 3000 is already in use')
+      expect(logger.error).toHaveBeenCalledWith(
+        'Port 3000 is already in use',
+        expect.objectContaining({ port: 3000 })
       );
-      consoleSpy.mockRestore();
     });
 
     it('should handle generic server errors', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       let errorCallback: ((error: any) => void) | null = null;
 
       const listenMock = jest.fn().mockImplementation((port) => {
@@ -183,10 +189,10 @@ describe('HttpTransportStrategy', () => {
       createStrategy();
 
       await expect(strategy.connect()).rejects.toThrow('Failed to start HTTP server: Generic error');
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Error starting HTTP server: Generic error')
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error starting HTTP server: Generic error'),
+        expect.objectContaining({ error: expect.any(Error) })
       );
-      consoleSpy.mockRestore();
     });
   });
 
@@ -254,7 +260,6 @@ describe('HttpTransportStrategy', () => {
     });
 
     it('should return 500 error on exception during request handling', async () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
       mockStreamableTransport.handleRequest.mockImplementation(() => {
         throw new Error('Test error');
       });
@@ -270,19 +275,16 @@ describe('HttpTransportStrategy', () => {
         },
         id: null,
       });
-      errorSpy.mockRestore();
     });
 
     it('should log error when request handling fails', async () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
       mockStreamableTransport.handleRequest.mockImplementation(() => {
         throw new Error('Test error');
       });
 
       await app.post('/mcp').send({ method: 'test' });
 
-      expect(errorSpy).toHaveBeenCalledWith('Error handling MCP request:', expect.any(Error));
-      errorSpy.mockRestore();
+      expect(logger.error).toHaveBeenCalledWith('Error handling MCP request', expect.objectContaining({ error: expect.any(Error) }));
     });
   });
 

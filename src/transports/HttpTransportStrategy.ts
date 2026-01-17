@@ -2,6 +2,8 @@ import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type express from 'express';
+import { rateLimit } from 'express-rate-limit';
+import { logger } from '../logger.js';
 import type { StockQuotesService } from '../stockQuotesService.js';
 import { registerToolsOnServer } from '../toolRegistration.js';
 import type { TransportStrategy } from './TransportStrategy.js';
@@ -61,17 +63,15 @@ export class HttpTransportStrategy implements TransportStrategy {
       }
 
       this.httpServer.on('listening', () => {
-        console.log(`MCP Server running on http://localhost:${this.httpPort}/mcp`);
+        logger.info(`MCP Server running on http://localhost:${this.httpPort}/mcp`);
         resolve();
       });
 
       this.httpServer.on('error', (error: NodeJS.ErrnoException) => {
         if (error.code === 'EADDRINUSE') {
-          console.error(
-            `Error: Port ${this.httpPort} is already in use. Please check if another process is using this port or specify a different port using --http-port.`
-          );
+          logger.error(`Port ${this.httpPort} is already in use`, { port: this.httpPort });
         } else {
-          console.error(`Error starting HTTP server: ${error.message}`);
+          logger.error(`Error starting HTTP server: ${error.message}`, { error });
         }
         reject(new Error(`Failed to start HTTP server: ${error.message}`));
       });
@@ -83,6 +83,24 @@ export class HttpTransportStrategy implements TransportStrategy {
    */
   private setupExpressRoutes(): void {
     this.expressApp ??= createMcpExpressApp({ host: this.httpHost });
+
+    // Apply rate limiting to all routes
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // limit each IP to 100 requests per windowMs
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: {
+        jsonrpc: '2.0',
+        error: {
+          code: -32001,
+          message: 'Too many requests, please try again later.',
+        },
+        id: null,
+      },
+    });
+
+    this.expressApp.use(limiter);
 
     // Main MCP endpoint for stateless Streamable HTTP
     this.expressApp.post('/mcp', async (req, res) => {
@@ -113,7 +131,7 @@ export class HttpTransportStrategy implements TransportStrategy {
           await server.close();
         });
       } catch (error) {
-        console.error('Error handling MCP request:', error);
+        logger.error('Error handling MCP request', { error });
         if (!res.headersSent) {
           res.status(500).json({
             jsonrpc: '2.0',

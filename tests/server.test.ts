@@ -138,7 +138,7 @@ describe('StockQuotesServer Refactoring', () => {
   });
 
   describe('connect method', () => {
-    it('should register tools on transport server when connecting with stdio', async () => {
+    it('should connect transport when using stdio', async () => {
       const config = {
         name: 'test-server',
         version: '1.0.0',
@@ -148,17 +148,15 @@ describe('StockQuotesServer Refactoring', () => {
 
       const server = new StockQuotesServer(config, mockStockService);
       const connectSpy = jest.spyOn((server as any).transportStrategy, 'connect');
-      const getServerSpy = jest.spyOn((server as any).transportStrategy, 'getServer');
 
       await server.connect();
 
-      expect(getServerSpy).toHaveBeenCalled();
       expect(connectSpy).toHaveBeenCalled();
 
       await server.close();
     });
 
-    it('should register tools on transport server when connecting with http', async () => {
+    it('should connect transport when using http', async () => {
       const config = {
         name: 'test-server',
         version: '1.0.0',
@@ -169,11 +167,9 @@ describe('StockQuotesServer Refactoring', () => {
 
       const server = new StockQuotesServer(config, mockStockService);
       const connectSpy = jest.spyOn((server as any).transportStrategy, 'connect');
-      const getServerSpy = jest.spyOn((server as any).transportStrategy, 'getServer');
 
       await server.connect();
 
-      expect(getServerSpy).toHaveBeenCalled();
       expect(connectSpy).toHaveBeenCalled();
 
       await server.close();

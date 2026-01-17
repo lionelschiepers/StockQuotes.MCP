@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { logger } from '../logger.js';
+import { registerToolsOnServer } from '../toolRegistration.js';
 import type { StockQuotesService } from '../stockQuotesService.js';
 import type { TransportStrategy } from './TransportStrategy.js';
 
@@ -15,13 +16,14 @@ export class StdioTransportStrategy implements TransportStrategy {
    * Create a new StdioTransportStrategy instance
    * @param serverName - Name of the server
    * @param serverVersion - Version of the server
-   * @param _stockService - Stock quotes service instance (not used in this strategy but required by interface)
+   * @param stockService - Stock quotes service instance
    */
-  constructor(serverName: string, serverVersion: string, _stockService: StockQuotesService) {
+  constructor(serverName: string, serverVersion: string, stockService: StockQuotesService) {
     this.server = new McpServer({
       name: serverName,
       version: serverVersion,
     });
+    registerToolsOnServer(this.server, stockService);
   }
 
   /**

@@ -1,6 +1,5 @@
 import type { StockQuotesService } from './stockQuotesService.js';
 import { StockQuotesService as StockQuotesServiceImpl } from './stockQuotesService.js';
-import { registerToolsOnServer } from './toolRegistration.js';
 import { TransportFactory } from './transports/TransportFactory.js';
 import type { TransportStrategy } from './transports/TransportStrategy.js';
 import type { ServerConfig } from './types.js';
@@ -33,8 +32,6 @@ export class StockQuotesServer {
    * Connect to the appropriate transport using the strategy pattern
    */
   async connect(): Promise<void> {
-    const server = this.transportStrategy.getServer();
-    registerToolsOnServer(server, this.stockService);
     await this.transportStrategy.connect();
   }
 

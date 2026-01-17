@@ -46,6 +46,7 @@ export class HttpTransportStrategy implements TransportStrategy {
       name: serverName,
       version: serverVersion,
     });
+    registerToolsOnServer(this.server, this.stockService);
   }
 
   /**
@@ -105,22 +106,13 @@ export class HttpTransportStrategy implements TransportStrategy {
     // Main MCP endpoint for stateless Streamable HTTP
     this.expressApp.post('/mcp', async (req, res) => {
       try {
-        // Create a new MCP server instance for each request (stateless)
-        const server = new McpServer({
-          name: this.serverName,
-          version: this.serverVersion,
-        });
-
-        // Register tools on the new server instance
-        registerToolsOnServer(server, this.stockService);
-
         // Create stateless transport (no session tracking)
         const transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: undefined, // Stateless - no session tracking
         });
 
         // Connect server to transport
-        await server.connect(transport);
+        await this.server.connect(transport);
 
         // Handle the request
         await transport.handleRequest(req, res, req.body);
@@ -128,7 +120,6 @@ export class HttpTransportStrategy implements TransportStrategy {
         // Clean up when request is closed
         res.on('close', async () => {
           await transport.close();
-          await server.close();
         });
       } catch (error) {
         logger.error('Error handling MCP request', { error });

@@ -17,7 +17,7 @@ describe('YahooFinanceClient', () => {
     };
 
     // Inject the mock into the client
-    client = new YahooFinanceClient(mockYahooInstance);
+    client = new YahooFinanceClient(mockYahooInstance as any);
   });
 
   it('should call yahooFinance.quote', async () => {

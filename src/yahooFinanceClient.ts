@@ -8,17 +8,14 @@ export interface YahooClient {
 }
 
 export class YahooFinanceClient implements YahooClient {
-  private readonly client: unknown;
+  private readonly client: InstanceType<typeof YahooFinance>;
 
-  constructor(client?: unknown) {
+  constructor(client?: InstanceType<typeof YahooFinance>) {
     this.client = client ?? new YahooFinance();
   }
 
   async quote(symbol: string, options?: object): Promise<YahooQuote | YahooQuote[]> {
-    const result = await (this.client as { quote(s: string, o?: object): Promise<unknown> }).quote(
-      symbol,
-      options
-    );
+    const result = await this.client.quote(symbol, options);
     return result as YahooQuote | YahooQuote[];
   }
 
@@ -27,9 +24,8 @@ export class YahooFinanceClient implements YahooClient {
     options?: unknown,
     moduleOptions?: object
   ): Promise<YahooSearchResponse> {
-    const result = await (
-      this.client as { search(q: string, o?: unknown, m?: object): Promise<unknown> }
-    ).search(query, options, moduleOptions);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+    const result = await this.client.search(query, options as any, moduleOptions);
     return result as YahooSearchResponse;
   }
 
@@ -38,9 +34,8 @@ export class YahooFinanceClient implements YahooClient {
     options?: unknown,
     moduleOptions?: object
   ): Promise<YahooChartResponse> {
-    const result = await (
-      this.client as { chart(s: string, o?: unknown, m?: object): Promise<unknown> }
-    ).chart(symbol, options, moduleOptions);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+    const result = await this.client.chart(symbol, options as any, moduleOptions);
     return result as YahooChartResponse;
   }
 }

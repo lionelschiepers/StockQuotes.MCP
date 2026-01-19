@@ -51,4 +51,3 @@ export class YahooFinanceClient implements YahooClient {
     return result as YahooChartResponse;
   }
 }
-

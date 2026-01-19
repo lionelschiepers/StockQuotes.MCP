@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: npm audit
+      - name: npm audit fix
         run: npm audit fix --omit=dev
 
       - name: npm audit

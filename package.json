@@ -21,7 +21,9 @@
     "dist"
   ],
   "types": "dist/index.d.ts",
-  "bin": "dist/index.js",
+  "bin": {
+    "stockquotes-mcp": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",

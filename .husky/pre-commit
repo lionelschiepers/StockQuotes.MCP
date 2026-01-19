@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 #. "$(dirname -- "$0")/_/husky.sh"
 
-npm.cmd run lint
-npm.cmd run format
+if command -v npm.cmd >/dev/null 2>&1; then
+  NPM_BIN=npm.cmd
+else
+  NPM_BIN=npm
+fi
+
+$NPM_BIN run lint
+$NPM_BIN run format

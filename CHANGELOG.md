@@ -1,3 +1,11 @@
+## [1.0.5](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.4...v1.0.5) (2026-01-19)
+
+
+### Bug Fixes
+
+* husky on linux ([7b3bfe8](https://github.com/lionelschiepers/StockQuotes.MCP/commit/7b3bfe8ac392aadf623cd00505de20e25a3a8771))
+* sonarqube warnings ([444ba30](https://github.com/lionelschiepers/StockQuotes.MCP/commit/444ba3057666d73e9273f5a13baa40deaee5e2ef))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

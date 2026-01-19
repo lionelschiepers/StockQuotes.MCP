@@ -160,7 +160,9 @@ process.on('SIGTERM', () => {
 });
 
 // Start the server
-main().catch((error: unknown) => {
+try {
+  await main();
+} catch (error) {
   logger.error('Unhandled error', { error });
   process.exit(1);
-});
+}

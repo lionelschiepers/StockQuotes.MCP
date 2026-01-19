@@ -1,3 +1,10 @@
+## [1.0.9](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.8...v1.0.9) (2026-01-19)
+
+
+### Bug Fixes
+
+* avoid packages to be published twice ([370b690](https://github.com/lionelschiepers/StockQuotes.MCP/commit/370b6909648296e5dedd94465f44aba5ca1e6cbf))
+
 ## [1.0.8](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.7...v1.0.8) (2026-01-19)
 
 

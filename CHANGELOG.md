@@ -1,3 +1,10 @@
+## [1.0.7](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.6...v1.0.7) (2026-01-19)
+
+
+### Bug Fixes
+
+* don't run test in publish ([f0a8786](https://github.com/lionelschiepers/StockQuotes.MCP/commit/f0a8786f54d237e0dccc1a7397928637b6b92fa0))
+
 ## [1.0.6](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.5...v1.0.6) (2026-01-19)
 
 

@@ -45,11 +45,13 @@ It transforms your AI from a static text generator into a dynamic financial anal
 ## 🚀 Features
 
 *   **Real-time Data**: Instant access to prices, volume, market cap, and more via Yahoo Finance.
+*   **Smart Caching**: Built-in caching (5min for quotes, 30min for search) to optimize performance and reduce API limits.
 *   **Dual Transport**: Supports `stdio` (for local CLIs) and `SSE/HTTP` (for remote/web clients).
+*   **Secure & Robust**: HTTP transport includes `helmet` security headers and rate limiting (100 req/15min).
 *   **Smart Search**: Fuzzy search for stocks by company name or ticker symbol.
 *   **Multi-Asset Support**: Works with Stocks, ETFs, Cryptocurrencies, and Indices.
 *   **Type-Safe**: Built with 100% TypeScript for reliability.
-*   **Production Ready**: Includes Docker support, CI/CD pipelines, and comprehensive testing.
+*   **Production Ready**: Includes Docker support, structured JSON logging (Winston), CI/CD pipelines, and comprehensive testing.
 
 ## ⚡ Quick Start
 

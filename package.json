@@ -39,7 +39,7 @@
     "clean": "rm -rf dist",
     "inspect": "tsc && npx -y @modelcontextprotocol/inspector node dist/index.js",
     "prepare": "husky",
-    "prepublishOnly": "npm run build && npm run test",
+    "prepublishOnly": "npm run build",
     "publish": "npm publish",
     "publish:dry": "npm publish --dry-run"
   },

@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.5...v1.0.6) (2026-01-19)
+
+
+### Bug Fixes
+
+* build before release to npm ([5666ccc](https://github.com/lionelschiepers/StockQuotes.MCP/commit/5666ccc720fdee9ccb186ddaca00e847a198dea8))
+
 ## [1.0.5](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.4...v1.0.5) (2026-01-19)
 
 

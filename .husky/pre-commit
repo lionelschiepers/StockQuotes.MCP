@@ -7,5 +7,9 @@ else
   NPM_BIN=npm
 fi
 
-$NPM_BIN run lint
-$NPM_BIN run format
+if [ -n "$CI" ]; then
+  echo "Skipping pre-commit checks in CI environment."
+else
+  $NPM_BIN run lint
+  $NPM_BIN run format
+fi

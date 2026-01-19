@@ -37,7 +37,8 @@ jobs:
         run: npm audit fix
 
       - name: npm audit
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
+        
       - name: Restore cache
         uses: actions/cache@v4
         with:

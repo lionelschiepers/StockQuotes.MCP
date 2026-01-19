@@ -47,6 +47,7 @@ export class StockQuotesService {
     try {
       const validFields = fields ? fields.filter((field: string) => field.length > 0) : undefined;
       const options = validFields ? { fields: validFields } : undefined;
+
       const result = await this.yahooClient.quote(ticker, options);
 
       if (!result) {
@@ -138,34 +139,38 @@ export class StockQuotesService {
       return cachedResults;
     }
 
-    const results: YahooSearchResponse = await this.yahooClient.search(query);
-    const quotes = results.quotes ?? [];
+    try {
+      const results: YahooSearchResponse = await this.yahooClient.search(query);
+      const quotes = results.quotes ?? [];
 
-    const searchResults = quotes
-      .filter(
-        (
-          quote: YahooSearchQuote
-        ): quote is YahooSearchQuote & {
-          symbol: string;
-          exchange: string;
-          shortname?: string;
-          longname?: string;
-        } =>
-          typeof quote.symbol === 'string' &&
-          typeof quote.exchange === 'string' &&
-          (typeof quote.shortname === 'string' || typeof quote.longname === 'string')
-      )
-      .map(
-        (result): StockSearchResult => ({
-          symbol: result.symbol,
-          name: result.shortname ?? result.longname ?? '',
-          exchange: result.exchange,
-        })
-      );
+      const searchResults = quotes
+        .filter(
+          (
+            quote: YahooSearchQuote
+          ): quote is YahooSearchQuote & {
+            symbol: string;
+            exchange: string;
+            shortname?: string;
+            longname?: string;
+          } =>
+            typeof quote.symbol === 'string' &&
+            typeof quote.exchange === 'string' &&
+            (typeof quote.shortname === 'string' || typeof quote.longname === 'string')
+        )
+        .map(
+          (result): StockSearchResult => ({
+            symbol: result.symbol,
+            name: result.shortname ?? result.longname ?? '',
+            exchange: result.exchange,
+          })
+        );
 
-    // Cache search results for 30 minutes
-    this.cache.set(cacheKey, searchResults, 1800);
-    return searchResults;
+      // Cache search results for 30 minutes
+      this.cache.set(cacheKey, searchResults, 1800);
+      return searchResults;
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**

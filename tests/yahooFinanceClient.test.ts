@@ -23,9 +23,9 @@ describe('YahooFinanceClient', () => {
   it('should call yahooFinance.quote', async () => {
     mockYahooInstance.quote.mockResolvedValue({ symbol: 'AAPL', price: 150 });
 
-    const result = await client.quote('AAPL', { modules: ['price'] });
+    const result = await client.quote('AAPL', { fields: ['price'] });
 
-    expect(mockYahooInstance.quote).toHaveBeenCalledWith('AAPL', { modules: ['price'] });
+    expect(mockYahooInstance.quote).toHaveBeenCalledWith('AAPL', { fields: ['price'] });
     expect(result).toEqual({ symbol: 'AAPL', price: 150 });
   });
 

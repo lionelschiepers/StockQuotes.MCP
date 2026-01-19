@@ -1,10 +1,24 @@
 import YahooFinance from 'yahoo-finance2';
 import type { YahooChartResponse, YahooQuote, YahooSearchResponse } from './types.js';
 
+type QuoteOptions = Parameters<InstanceType<typeof YahooFinance>['quote']>[1];
+type SearchOptions = Parameters<InstanceType<typeof YahooFinance>['search']>[1];
+type SearchModuleOptions = Parameters<InstanceType<typeof YahooFinance>['search']>[2];
+type ChartOptions = Parameters<InstanceType<typeof YahooFinance>['chart']>[1];
+type ChartModuleOptions = Parameters<InstanceType<typeof YahooFinance>['chart']>[2];
+
 export interface YahooClient {
-  quote(symbol: string, options?: object): Promise<YahooQuote | YahooQuote[]>;
-  search(query: string, options?: unknown, moduleOptions?: object): Promise<YahooSearchResponse>;
-  chart(symbol: string, options?: unknown, moduleOptions?: object): Promise<YahooChartResponse>;
+  quote(symbol: string, options?: QuoteOptions): Promise<YahooQuote | YahooQuote[]>;
+  search(
+    query: string,
+    options?: SearchOptions,
+    moduleOptions?: SearchModuleOptions
+  ): Promise<YahooSearchResponse>;
+  chart(
+    symbol: string,
+    options: ChartOptions,
+    moduleOptions?: ChartModuleOptions
+  ): Promise<YahooChartResponse>;
 }
 
 export class YahooFinanceClient implements YahooClient {
@@ -14,28 +28,27 @@ export class YahooFinanceClient implements YahooClient {
     this.client = client ?? new YahooFinance();
   }
 
-  async quote(symbol: string, options?: object): Promise<YahooQuote | YahooQuote[]> {
+  async quote(symbol: string, options?: QuoteOptions): Promise<YahooQuote | YahooQuote[]> {
     const result = await this.client.quote(symbol, options);
     return result as YahooQuote | YahooQuote[];
   }
 
   async search(
     query: string,
-    options?: unknown,
-    moduleOptions?: object
+    options?: SearchOptions,
+    moduleOptions?: SearchModuleOptions
   ): Promise<YahooSearchResponse> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-    const result = await this.client.search(query, options as any, moduleOptions);
+    const result = await this.client.search(query, options, moduleOptions);
     return result as YahooSearchResponse;
   }
 
   async chart(
     symbol: string,
-    options?: unknown,
-    moduleOptions?: object
+    options: ChartOptions,
+    moduleOptions?: ChartModuleOptions
   ): Promise<YahooChartResponse> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
-    const result = await this.client.chart(symbol, options as any, moduleOptions);
+    const result = await this.client.chart(symbol, options, moduleOptions);
     return result as YahooChartResponse;
   }
 }
+

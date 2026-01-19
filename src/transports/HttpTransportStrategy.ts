@@ -3,6 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type express from 'express';
 import { rateLimit } from 'express-rate-limit';
+import helmet from 'helmet';
 import { logger } from '../logger.js';
 import type { StockQuotesService } from '../stockQuotesService.js';
 import { registerToolsOnServer } from '../toolRegistration.js';
@@ -84,6 +85,9 @@ export class HttpTransportStrategy implements TransportStrategy {
    */
   private setupExpressRoutes(): void {
     this.expressApp ??= createMcpExpressApp({ host: this.httpHost });
+
+    // Security headers
+    this.expressApp.use(helmet());
 
     // Apply rate limiting to all routes
     const limiter = rateLimit({

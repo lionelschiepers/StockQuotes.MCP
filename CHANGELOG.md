@@ -1,3 +1,10 @@
+## [1.0.8](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.7...v1.0.8) (2026-01-19)
+
+
+### Bug Fixes
+
+* publish new fix ([2d92340](https://github.com/lionelschiepers/StockQuotes.MCP/commit/2d92340a88e7d38bc1d81e38260a0d35334f3d0d))
+
 ## [1.0.7](https://github.com/lionelschiepers/StockQuotes.MCP/compare/v1.0.6...v1.0.7) (2026-01-19)
 
 

@@ -84,6 +84,7 @@ export class HttpTransportStrategy implements TransportStrategy {
    * Setup Express routes for stateless Streamable HTTP transport
    */
   private setupExpressRoutes(): void {
+    // Initialize expressApp if not already initialized
     this.expressApp ??= createMcpExpressApp({ host: this.httpHost });
 
     // Security headers

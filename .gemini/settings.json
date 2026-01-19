@@ -3,19 +3,9 @@
     "fileName": ["AGENTS.md", "CONTEXT.md", "GEMINI.md"]
   },
   "mcpServers": {
-    "stock-quotes-http": {
-      "httpUrl": "http://192.168.1.34:30401/mcp",
-      "headers": {
-        "Accept": "application/json, text/event-stream"
-      }
-    }/*,
     "stock-quotes": {
-      "command": "node",
-      "args": [
-        "./dist/index.js", 
-        "--transport",
-        "stdio"
-      ]
-    }*/
+      "command": "npx",
+      "args": ["-y", "stockquotes-mcp", "--transport", "stdio"]
+    }
   }
 }

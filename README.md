@@ -24,6 +24,7 @@ This **Model Context Protocol (MCP)** server seamlessly bridges the gap between 
 - [Example Interaction](#-example-interaction)
 - [Integration Guide](#-integration-with-ai-platforms)
   - [Cline](#cline)
+  - [Claude Code](#claude-code)
   - [Gemini CLI](#gemini-cli)
 - [Docker Support](#-docker-usage)
 - [Development](#-development)
@@ -35,23 +36,23 @@ This **Model Context Protocol (MCP)** server seamlessly bridges the gap between 
 
 AI models are powerful, but they often lack real-time knowledge. By connecting them to this MCP server, you unlock their ability to:
 
-*   **Analyze Market Trends**: "Compare the P/E ratio of Apple vs. Microsoft."
-*   **Track Portfolios**: "What is the current value of 10 shares of NVDA?"
-*   **Research Companies**: "Get me the latest market cap and 52-week range for Tesla."
-*   **Contextualize News**: "How did the latest earnings report affect Google's stock price today?"
+- **Analyze Market Trends**: "Compare the P/E ratio of Apple vs. Microsoft."
+- **Track Portfolios**: "What is the current value of 10 shares of NVDA?"
+- **Research Companies**: "Get me the latest market cap and 52-week range for Tesla."
+- **Contextualize News**: "How did the latest earnings report affect Google's stock price today?"
 
 It transforms your AI from a static text generator into a dynamic financial analyst.
 
 ## 🚀 Features
 
-*   **Real-time Data**: Instant access to prices, volume, market cap, and more via Yahoo Finance.
-*   **Smart Caching**: Built-in caching (5min for quotes, 30min for search) to optimize performance and reduce API limits.
-*   **Dual Transport**: Supports `stdio` (for local CLIs) and `SSE/HTTP` (for remote/web clients).
-*   **Secure & Robust**: HTTP transport includes `helmet` security headers and rate limiting (100 req/15min).
-*   **Smart Search**: Fuzzy search for stocks by company name or ticker symbol.
-*   **Multi-Asset Support**: Works with Stocks, ETFs, Cryptocurrencies, and Indices.
-*   **Type-Safe**: Built with 100% TypeScript for reliability.
-*   **Production Ready**: Includes Docker support, structured JSON logging (Winston), CI/CD pipelines, and comprehensive testing.
+- **Real-time Data**: Instant access to prices, volume, market cap, and more via Yahoo Finance.
+- **Smart Caching**: Built-in caching (5min for quotes, 30min for search) to optimize performance and reduce API limits.
+- **Dual Transport**: Supports `stdio` (for local CLIs) and `SSE/HTTP` (for remote/web clients).
+- **Secure & Robust**: HTTP transport includes `helmet` security headers and rate limiting (100 req/15min).
+- **Smart Search**: Fuzzy search for stocks by company name or ticker symbol.
+- **Multi-Asset Support**: Works with Stocks, ETFs, Cryptocurrencies, and Indices.
+- **Type-Safe**: Built with 100% TypeScript for reliability.
+- **Production Ready**: Includes Docker support, structured JSON logging (Winston), CI/CD pipelines, and comprehensive testing.
 
 ## ⚡ Quick Start
 
@@ -82,18 +83,20 @@ npm run start:stdio
 
 ### Prerequisites
 
-*   Node.js 22.0.0 or higher (LTS)
-*   npm 9.0.0 or higher
+- Node.js 22.0.0 or higher (LTS)
+- npm 9.0.0 or higher
 
 ### Step-by-Step
 
 1.  **Clone the repository**
+
     ```bash
     git clone https://github.com/lionelschiepers/StockQuotes.MCP.git
     cd StockQuotes.MCP
     ```
 
 2.  **Install dependencies**
+
     ```bash
     npm install
     ```
@@ -107,42 +110,47 @@ npm run start:stdio
 
 ### Command Line Options
 
-| Command | Description |
-| :--- | :--- |
+| Command               | Description                                                           |
+| :-------------------- | :-------------------------------------------------------------------- |
 | `npm run start:stdio` | Starts server with Standard I/O transport (Best for local AI agents). |
-| `npm run start:http` | Starts server with HTTP transport on port 3000. |
-| `npm run dev` | Runs in development mode with hot-reloading. |
+| `npm run start:http`  | Starts server with HTTP transport on port 3000.                       |
+| `npm run dev`         | Runs in development mode with hot-reloading.                          |
 
 ### Available MCP Tools
 
 Your AI agent will have access to the following tools:
 
 #### 1. `get_stock_quote`
+
 Fetches detailed financial data for a specific ticker.
 
-*   **Example Prompt:** "What is the price of AAPL?"
-*   **Returns:** Price, Currency, Market Cap, Exchange, etc.
+- **Example Prompt:** "What is the price of AAPL?"
+- **Returns:** Price, Currency, Market Cap, Exchange, etc.
 
 #### 2. `search_stocks`
+
 Finds ticker symbols based on company names.
 
-*   **Example Prompt:** "Find the ticker for 'Hims & Hers'."
-*   **Returns:** List of matching symbols and names.
+- **Example Prompt:** "Find the ticker for 'Hims & Hers'."
+- **Returns:** List of matching symbols and names.
 
 #### 3. `get_historical_data`
+
 Fetches historical stock data for a specific date range.
 
-*   **Example Prompt:** "Get AAPL historical data from 2024-01-01 to 2024-01-31."
-*   **Returns:** Array of daily prices including date, close, high, low, and volume.
+- **Example Prompt:** "Get AAPL historical data from 2024-01-01 to 2024-01-31."
+- **Returns:** Array of daily prices including date, close, high, low, and volume.
 
 ## 💬 Example Interaction
 
 Here is a real-world example of how an AI assistant (like Gemini) uses this MCP server to perform data analysis:
 
 **User Prompt:**
+
 > "Using stock-quotes: Calculate the average price of AAPL for the last 200, 50 and 20 days. Output is {[{days, average}]}. Keep only 2 decimals for the numbers."
 
 **AI Response:**
+
 ```json
 [
   {
@@ -181,11 +189,56 @@ To use with [Cline](https://github.com/cline/cline), add this to your MCP settin
 }
 ```
 
+### Claude Code
+
+Integrate with [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code):
+
+**Method 1: CLI**
+Run the following command and follow the prompts:
+
+Linux
+```bash
+claude mcp add --transport stdio stockquotes-mcp -- npx -y stockquotes-mcp --transport stdio
+```
+
+Windows
+```bash
+claude mcp add --transport stdio stockquotes-mcp -- cmd /c npx -y stockquotes-mcp --transport stdio
+```
+
+**Method 2: Manual Configuration**
+Edit your global Claude settings (usually `~/.claude.json` or `~/.claude/settings.json`):
+
+Linux
+```json
+{
+  "mcpServers": {
+    "stock-quotes": {
+      "command": "npx",
+      "args": ["-y", "stockquotes-mcp", "--transport", "stdio"]
+    }
+  }
+}
+```
+
+Windows
+```json
+{
+  "mcpServers": {
+    "stock-quotes": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "stockquotes-mcp", "--transport", "stdio"]
+    }
+  }
+}
+```
+
 ### Gemini CLI
 
 Integrate with the Gemini CLI tool:
 
 **Method 1: Direct Command**
+
 ```bash
 gemini mcp add stock-quotes npx "-y stockquotes-mcp --transport stdio"
 ```
@@ -199,17 +252,11 @@ Edit your `~/.gemini/settings.json`:
   "mcpServers": {
     "stock-quotes": {
       "command": "npx",
-      "args": [
-        "-y",
-        "stockquotes-mcp", 
-        "--transport",
-        "stdio"
-      ]
-    }  
+      "args": ["-y", "stockquotes-mcp", "--transport", "stdio"]
+    }
   }
 }
 ```
-
 
 ```json
 // HTTP
@@ -220,7 +267,7 @@ Edit your `~/.gemini/settings.json`:
       "headers": {
         "Accept": "application/json, text/event-stream"
       }
-    }  
+    }
   }
 }
 ```
@@ -230,11 +277,13 @@ Edit your `~/.gemini/settings.json`:
 Run the server in an isolated container.
 
 **Build:**
+
 ```bash
 docker build -t stockquotes-mcp:latest .
 ```
 
 **Run (HTTP Mode):**
+
 ```bash
 docker run -p 3000:3000 stockquotes-mcp:latest
 ```
@@ -242,6 +291,7 @@ docker run -p 3000:3000 stockquotes-mcp:latest
 ## 💻 Development
 
 ### Project Structure
+
 ```
 StockQuotes.MCP/
 ├── src/               # Source code
@@ -251,9 +301,10 @@ StockQuotes.MCP/
 ```
 
 ### Quality Checks
-*   **Test:** `npm test`
-*   **Lint:** `npm run lint`
-*   **Format:** `npm run format`
+
+- **Test:** `npm test`
+- **Lint:** `npm run lint`
+- **Format:** `npm run format`
 
 ## 📄 License
 
@@ -261,9 +312,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-*   [Yahoo Finance2](https://github.com/gadicc/yahoo-finance2) API wrapper.
-*   [Model Context Protocol](https://modelcontextprotocol.io/) standard.
+- [Yahoo Finance2](https://github.com/gadicc/yahoo-finance2) API wrapper.
+- [Model Context Protocol](https://modelcontextprotocol.io/) standard.
 
 ---
 
-*Disclaimer: This tool is for educational purposes. Data provided by Yahoo Finance may be delayed. Validate all financial data before making investment decisions.*
+_Disclaimer: This tool is for educational purposes. Data provided by Yahoo Finance may be delayed. Validate all financial data before making investment decisions._

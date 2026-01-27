@@ -1,6 +1,5 @@
 import { registerToolsOnServer } from '../src/toolRegistration.js';
 import { StockQuotesService } from '../src/stockQuotesService.js';
-import * as z from 'zod';
 
 describe('Tool Registration', () => {
   let mockServer: any;

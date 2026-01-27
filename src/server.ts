@@ -13,7 +13,6 @@ type HttpTransportStrategy = TransportStrategy & {
  * MCP Server for Stock Quotes using Yahoo Finance
  */
 export class StockQuotesServer {
-  private readonly config: ServerConfig;
   private readonly stockService: StockQuotesService;
   private readonly transportStrategy: TransportStrategy;
 
@@ -23,7 +22,6 @@ export class StockQuotesServer {
    * @param stockService - Stock quotes service (dependency injected)
    */
   constructor(config: ServerConfig, stockService: StockQuotesService) {
-    this.config = config;
     this.stockService = stockService;
     this.transportStrategy = TransportFactory.createTransport(config, this.stockService);
   }

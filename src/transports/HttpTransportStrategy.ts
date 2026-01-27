@@ -142,12 +142,12 @@ export class HttpTransportStrategy implements TransportStrategy {
     });
 
     // Health check endpoint
-    this.expressApp.get('/health', (req, res) => {
+    this.expressApp.get('/health', (_req, res) => {
       res.json({ status: 'healthy', name: this.serverName, version: this.serverVersion });
     });
 
     // Disallow GET and DELETE methods on /mcp endpoint
-    this.expressApp.get('/mcp', (req, res) => {
+    this.expressApp.get('/mcp', (_req, res) => {
       res.status(405).json({
         jsonrpc: '2.0',
         error: {
@@ -158,7 +158,7 @@ export class HttpTransportStrategy implements TransportStrategy {
       });
     });
 
-    this.expressApp.delete('/mcp', (req, res) => {
+    this.expressApp.delete('/mcp', (_req, res) => {
       res.status(405).json({
         jsonrpc: '2.0',
         error: {

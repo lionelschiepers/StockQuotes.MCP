@@ -80,7 +80,7 @@ describe('HttpTransportStrategy', () => {
   describe('connect', () => {
     it('should setup routes and start listening', async () => {
       let listeningCallback: (() => void) | null = null;
-      const listenMock = jest.fn().mockImplementation((port) => {
+      const listenMock = jest.fn().mockImplementation((_port) => {
         setTimeout(() => {
           if (listeningCallback) {
             listeningCallback();
@@ -105,7 +105,7 @@ describe('HttpTransportStrategy', () => {
 
     it('should log the correct message when connected', async () => {
       let listeningCallback: (() => void) | null = null;
-      const listenMock = jest.fn().mockImplementation((port) => {
+      const listenMock = jest.fn().mockImplementation((_port) => {
         setTimeout(() => {
           if (listeningCallback) {
             listeningCallback();
@@ -139,7 +139,7 @@ describe('HttpTransportStrategy', () => {
     it('should handle EADDRINUSE error', async () => {
       let errorCallback: ((error: any) => void) | null = null;
 
-      const listenMock = jest.fn().mockImplementation((port) => {
+      const listenMock = jest.fn().mockImplementation((_port) => {
         setTimeout(() => {
           if (errorCallback) {
             const error: any = new Error('Address in use');
@@ -170,7 +170,7 @@ describe('HttpTransportStrategy', () => {
     it('should handle generic server errors', async () => {
       let errorCallback: ((error: any) => void) | null = null;
 
-      const listenMock = jest.fn().mockImplementation((port) => {
+      const listenMock = jest.fn().mockImplementation((_port) => {
         setTimeout(() => {
           if (errorCallback) {
             const error = new Error('Generic error');
@@ -200,7 +200,7 @@ describe('HttpTransportStrategy', () => {
     let app: any;
 
     beforeEach(() => {
-      const listenMock = jest.fn().mockImplementation((port, callback) => {
+      const listenMock = jest.fn().mockImplementation((_port, callback) => {
         callback();
         return mockExpressApp;
       });
@@ -249,7 +249,7 @@ describe('HttpTransportStrategy', () => {
     });
 
     it('should handle POST /mcp successfully', async () => {
-      mockStreamableTransport.handleRequest.mockImplementation((req: any, res: any, body: any) => {
+      mockStreamableTransport.handleRequest.mockImplementation((_req: any, res: any, _body: any) => {
         res.status(200).json({ result: 'success' });
       });
 

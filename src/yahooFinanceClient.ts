@@ -8,12 +8,34 @@ type ChartOptions = Parameters<InstanceType<typeof YahooFinance>['chart']>[1];
 type ChartModuleOptions = Parameters<InstanceType<typeof YahooFinance>['chart']>[2];
 
 export interface YahooClient {
+  /**
+   * Fetch stock quote(s) for a given symbol
+   * @param symbol - Ticker symbol
+   * @param options - Quote options
+   * @returns Promise<YahooQuote | YahooQuote[]> - Quote data
+   */
   quote(symbol: string, options?: QuoteOptions): Promise<YahooQuote | YahooQuote[]>;
+
+  /**
+   * Search for stocks/companies
+   * @param query - Search query
+   * @param options - Search options
+   * @param moduleOptions - Search module options
+   * @returns Promise<YahooSearchResponse> - Search results
+   */
   search(
     query: string,
     options?: SearchOptions,
     moduleOptions?: SearchModuleOptions
   ): Promise<YahooSearchResponse>;
+
+  /**
+   * Fetch chart data (historical data)
+   * @param symbol - Ticker symbol
+   * @param options - Chart options (period1, period2, interval, etc.)
+   * @param moduleOptions - Chart module options
+   * @returns Promise<YahooChartResponse> - Chart data
+   */
   chart(
     symbol: string,
     options: ChartOptions,
@@ -24,15 +46,32 @@ export interface YahooClient {
 export class YahooFinanceClient implements YahooClient {
   private readonly client: InstanceType<typeof YahooFinance>;
 
+  /**
+   * Create a new YahooFinanceClient
+   * @param client - Optional YahooFinance instance
+   */
   constructor(client?: InstanceType<typeof YahooFinance>) {
     this.client = client ?? new YahooFinance();
   }
 
+  /**
+   * Fetch stock quote(s) for a given symbol
+   * @param symbol - Ticker symbol
+   * @param options - Quote options
+   * @returns Promise<YahooQuote | YahooQuote[]> - Quote data
+   */
   async quote(symbol: string, options?: QuoteOptions): Promise<YahooQuote | YahooQuote[]> {
     const result = await this.client.quote(symbol, options);
     return result as YahooQuote | YahooQuote[];
   }
 
+  /**
+   * Search for stocks/companies
+   * @param query - Search query
+   * @param options - Search options
+   * @param moduleOptions - Search module options
+   * @returns Promise<YahooSearchResponse> - Search results
+   */
   async search(
     query: string,
     options?: SearchOptions,
@@ -42,6 +81,13 @@ export class YahooFinanceClient implements YahooClient {
     return result as YahooSearchResponse;
   }
 
+  /**
+   * Fetch chart data (historical data)
+   * @param symbol - Ticker symbol
+   * @param options - Chart options
+   * @param moduleOptions - Chart module options
+   * @returns Promise<YahooChartResponse> - Chart data
+   */
   async chart(
     symbol: string,
     options: ChartOptions,

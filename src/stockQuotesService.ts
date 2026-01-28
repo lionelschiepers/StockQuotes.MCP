@@ -136,7 +136,7 @@ export class StockQuotesService {
   /**
    * Search for a company by name or ticker
    * @param query - Search query string
-   * @returns Promise<Array<{symbol: string, name: string, exchange: string}>> - Search results
+   * @returns Promise<StockSearchResult[]> - Search results
    */
   async search(query: string): Promise<StockSearchResult[]> {
     const cacheKey = `search_${query}`;
@@ -182,7 +182,7 @@ export class StockQuotesService {
    * @param ticker - Stock ticker symbol (e.g., AAPL)
    * @param fromDate - Start date in 'YYYY-MM-DD' format
    * @param toDate - End date in 'YYYY-MM-DD' format
-   * @returns Promise<number[]> - An array of closing prices for each day.
+   * @returns Promise<HistoricalData[]> - An array of historical data points (date, close, high, low, volume).
    */
   async getHistoricalData(
     ticker: string,

@@ -10,7 +10,7 @@ import { HistoricalDataSchema, StockQuoteSchema, StockSearchSchema } from './typ
  */
 export function registerToolsOnServer(server: McpServer, stockService: StockQuotesService): void {
   server.registerTool(
-    `get_stock_quote`,
+    'get_stock_quote',
     {
       title: 'Get Stock Quote',
       description:
@@ -61,7 +61,7 @@ export function registerToolsOnServer(server: McpServer, stockService: StockQuot
   );
 
   server.registerTool(
-    `get_historical_data`,
+    'get_historical_data',
     {
       title: 'Get Historical Data for a TICKER',
       description:

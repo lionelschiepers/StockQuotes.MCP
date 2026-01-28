@@ -1,5 +1,6 @@
 import { StockQuotesService } from '../src/stockQuotesService.js';
 import { logger } from '../src/logger.js';
+import { ValidationError } from '../src/errors.js';
 import type { YahooClient } from '../src/yahooFinanceClient.js';
 
 // Mock logger
@@ -331,6 +332,43 @@ describe('StockQuotesService', () => {
         { date: '2023-01-03', close: 102, high: 107, low: 97, volume: 1100000 },
       ]);
       expect(mockChart).toHaveBeenCalledWith(ticker, { period1: fromDate, period2: '2023-01-04' });
+    });
+
+    it('should throw ValidationError for invalid fromDate format', async () => {
+      await expect(service.getHistoricalData('AAPL', 'invalid-date', '2023-01-01')).rejects.toThrow(
+        ValidationError
+      );
+      await expect(service.getHistoricalData('AAPL', 'invalid-date', '2023-01-01')).rejects.toThrow(
+        /Invalid fromDate/
+      );
+    });
+
+    it('should throw ValidationError for invalid toDate format', async () => {
+      await expect(service.getHistoricalData('AAPL', '2023-01-01', 'invalid-date')).rejects.toThrow(
+        ValidationError
+      );
+      await expect(service.getHistoricalData('AAPL', '2023-01-01', 'invalid-date')).rejects.toThrow(
+        /Invalid toDate/
+      );
+    });
+
+    it('should throw ValidationError if fromDate is in the future', async () => {
+      const futureDate = '2099-01-01';
+      await expect(service.getHistoricalData('AAPL', futureDate, '2099-01-02')).rejects.toThrow(
+        'fromDate cannot be in the future.'
+      );
+    });
+
+    it('should throw ValidationError if fromDate is after toDate', async () => {
+      await expect(service.getHistoricalData('AAPL', '2023-01-02', '2023-01-01')).rejects.toThrow(
+        'fromDate must be before or equal to toDate.'
+      );
+    });
+
+    it('should throw ValidationError if date range exceeds 5 years', async () => {
+      await expect(service.getHistoricalData('AAPL', '2010-01-01', '2016-01-01')).rejects.toThrow(
+        'Date range cannot exceed 5 years.'
+      );
     });
 
     it('should throw an error if historical data fetch fails', async () => {

@@ -1,6 +1,14 @@
-import { addDays, format, parseISO } from 'date-fns';
+import {
+  addDays,
+  differenceInYears,
+  format,
+  isAfter,
+  isValid,
+  parseISO,
+  startOfToday,
+} from 'date-fns';
 import NodeCache from 'node-cache';
-import { NotFoundError, RateLimitError } from './errors.js';
+import { NotFoundError, RateLimitError, ValidationError } from './errors.js';
 import { logger } from './logger.js';
 import type {
   HistoricalData,
@@ -181,9 +189,31 @@ export class StockQuotesService {
     fromDate: string,
     toDate: string
   ): Promise<HistoricalData[]> {
+    const fromDateObj = parseISO(fromDate);
+    const toDateObj = parseISO(toDate);
+    const today = startOfToday();
+
+    if (!isValid(fromDateObj)) {
+      throw new ValidationError(`Invalid fromDate: ${fromDate}. Use YYYY-MM-DD format.`);
+    }
+    if (!isValid(toDateObj)) {
+      throw new ValidationError(`Invalid toDate: ${toDate}. Use YYYY-MM-DD format.`);
+    }
+
+    if (isAfter(fromDateObj, today)) {
+      throw new ValidationError('fromDate cannot be in the future.');
+    }
+
+    if (isAfter(fromDateObj, toDateObj)) {
+      throw new ValidationError('fromDate must be before or equal to toDate.');
+    }
+
+    if (differenceInYears(toDateObj, fromDateObj) > 5) {
+      throw new ValidationError('Date range cannot exceed 5 years.');
+    }
+
     try {
       // Yahoo Finance treats period2 as exclusive, so we add 1 day to include the end date
-      const toDateObj = parseISO(toDate);
       const period2 = format(addDays(toDateObj, 1), 'yyyy-MM-dd');
 
       const chart: YahooChartResponse = await this.yahooClient.chart(ticker, {
@@ -207,6 +237,10 @@ export class StockQuotesService {
 
       return historicalData;
     } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+
       logger.error(`Error fetching historical data for ${ticker}`, { ticker, error });
       throw new NotFoundError(
         `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`

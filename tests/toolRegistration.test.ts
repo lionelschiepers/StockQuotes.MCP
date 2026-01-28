@@ -1,5 +1,5 @@
 import { registerToolsOnServer } from '../src/toolRegistration.js';
-import { StockQuotesService } from '../src/stockQuotesService.js';
+import type { StockQuotesService } from '../src/stockQuotesService.js';
 
 describe('Tool Registration', () => {
   let mockServer: any;

@@ -4,7 +4,8 @@
 [![Code Coverage](https://codecov.io/github/lionelschiepers/StockQuotes.MCP/graph/badge.svg?token=GSD4M589HB)](https://codecov.io/github/lionelschiepers/StockQuotes.MCP)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lionelschiepers_StockQuotes.MCP&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=lionelschiepers_StockQuotes.MCP)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-24.0+-green.svg)](https://nodejs.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Compatible-green)](https://modelcontextprotocol.io/)
 
 **Empower your AI assistants with real-time financial market data.**
@@ -20,7 +21,7 @@ This **Model Context Protocol (MCP)** server seamlessly bridges the gap between 
 - [Quick Start](#-quick-start)
 - [Installation](#-installation)
 - [Usage](#-usage)
-- [Available Tools](#-available-mcp-tools)
+- [Available MCP Tools](#-available-mcp-tools)
 - [Example Interaction](#-example-interaction)
 - [Integration Guide](#-integration-with-ai-platforms)
   - [Cline](#cline)
@@ -28,6 +29,8 @@ This **Model Context Protocol (MCP)** server seamlessly bridges the gap between 
   - [Gemini CLI](#gemini-cli)
 - [Docker Support](#-docker-usage)
 - [Development](#-development)
+- [API Reference](#-api-reference)
+- [Troubleshooting](#-troubleshooting)
 - [License](#-license)
 
 ---
@@ -47,12 +50,14 @@ It transforms your AI from a static text generator into a dynamic financial anal
 
 - **Real-time Data**: Instant access to prices, volume, market cap, and more via Yahoo Finance.
 - **Smart Caching**: Built-in caching (5min for quotes, 30min for search) to optimize performance and reduce API limits.
-- **Dual Transport**: Supports `stdio` (for local CLIs) and `SSE/HTTP` (for remote/web clients).
+- **Dual Transport**: Supports `stdio` (for local CLIs) and `HTTP/SSE` (for remote/web clients).
 - **Secure & Robust**: HTTP transport includes `helmet` security headers and rate limiting (100 req/15min).
 - **Smart Search**: Fuzzy search for stocks by company name or ticker symbol.
 - **Multi-Asset Support**: Works with Stocks, ETFs, Cryptocurrencies, and Indices.
 - **Type-Safe**: Built with 100% TypeScript for reliability.
 - **Production Ready**: Includes Docker support, structured JSON logging (Winston), CI/CD pipelines, and comprehensive testing.
+- **Health Monitoring**: Built-in health check endpoint for monitoring server status.
+- **Flexible Field Selection**: Optional field filtering for stock quotes to reduce response size.
 
 ## ⚡ Quick Start
 
@@ -83,7 +88,7 @@ npm run start:stdio
 
 ### Prerequisites
 
-- Node.js 22.0.0 or higher (LTS)
+- Node.js 24.0.0 or higher
 - npm 9.0.0 or higher
 
 ### Step-by-Step
@@ -124,22 +129,32 @@ Your AI agent will have access to the following tools:
 
 Fetches detailed financial data for a specific ticker.
 
+- **Parameters:**
+  - `ticker` (required): Stock ticker symbol (e.g., AAPL, GOOGL, MSFT)
+  - `fields` (optional): Array of specific fields to return (e.g., `["regularMarketPrice", "marketCap"]`)
 - **Example Prompt:** "What is the price of AAPL?"
-- **Returns:** Price, Currency, Market Cap, Exchange, etc.
+- **Returns:** Price, Currency, Market Cap, Exchange, P/E ratio, 52-week range, and other key metrics.
 
 #### 2. `search_stocks`
 
 Finds ticker symbols based on company names.
 
+- **Parameters:**
+  - `query` (required): Search query (company name or ticker)
 - **Example Prompt:** "Find the ticker for 'Hims & Hers'."
-- **Returns:** List of matching symbols and names.
+- **Returns:** List of matching symbols, names, and exchanges.
 
 #### 3. `get_historical_data`
 
 Fetches historical stock data for a specific date range.
 
+- **Parameters:**
+  - `ticker` (required): Stock ticker symbol (e.g., AAPL)
+  - `fromDate` (required): Start date in YYYY-MM-DD format
+  - `toDate` (required): End date in YYYY-MM-DD format
+- **Constraints:** Date range cannot exceed 5 years
 - **Example Prompt:** "Get AAPL historical data from 2024-01-01 to 2024-01-31."
-- **Returns:** Array of daily prices including date, close, high, low, and volume.
+- **Returns:** Array of daily data including date, close, high, low, and volume.
 
 ## 💬 Example Interaction
 
@@ -288,23 +303,149 @@ docker build -t stockquotes-mcp:latest .
 docker run -p 3000:3000 stockquotes-mcp:latest
 ```
 
+**Health Check:**
+
+The Docker container includes a health check endpoint at `/health` that runs every 30 seconds.
+
 ## 💻 Development
 
 ### Project Structure
 
 ```
 StockQuotes.MCP/
-├── src/               # Source code
-├── tests/             # Jest tests
-├── .github/           # CI/CD Workflows
-└── ...
+├── src/                          # Source code
+│   ├── index.ts                  # Main entry point
+│   ├── server.ts                 # MCP server implementation
+│   ├── stockQuotesService.ts     # Business logic for stock data
+│   ├── yahooFinanceClient.ts     # Yahoo Finance API client
+│   ├── toolRegistration.ts      # MCP tool registration
+│   ├── types.ts                  # TypeScript types and Zod schemas
+│   ├── logger.ts                 # Winston logger configuration
+│   ├── errors.ts                 # Custom error classes
+│   └── transports/               # Transport strategies
+│       ├── TransportStrategy.ts  # Transport interface
+│       ├── StdioTransportStrategy.ts
+│       ├── HttpTransportStrategy.ts
+│       └── TransportFactory.ts
+├── tests/                        # Jest tests
+├── .github/                      # CI/CD Workflows
+├── docs/                         # Documentation
+└── dist/                         # Compiled JavaScript (generated)
 ```
+
+### Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run build` | Compile TypeScript to JavaScript |
+| `npm run build:watch` | Compile in watch mode |
+| `npm run start` | Start the server (requires transport flag) |
+| `npm run start:stdio` | Start with stdio transport |
+| `npm run start:http` | Start with HTTP transport on port 3000 |
+| `npm run dev` | Run in development mode with hot-reloading |
+| `npm run inspect` | Run with MCP inspector for debugging |
+| `npm test` | Run all tests |
+| `npm run test:coverage` | Run tests with coverage report |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run lint` | Run ESLint to check code quality |
+| `npm run lint:fix` | Fix ESLint issues automatically |
+| `npm run format` | Format code with Prettier |
+| `npm run format:check` | Check code formatting |
+| `npm run check` | Run both lint and format checks |
+| `npm run fix` | Fix both lint and format issues |
+| `npm run clean` | Remove the dist directory |
 
 ### Quality Checks
 
-- **Test:** `npm test`
-- **Lint:** `npm run lint`
-- **Format:** `npm run format`
+- **Test:** `npm test` (Jest with 50% coverage threshold)
+- **Lint:** `npm run lint` (ESLint with TypeScript support)
+- **Format:** `npm run format` (Prettier)
+
+## 📚 API Reference
+
+### HTTP Endpoints
+
+When running in HTTP mode, the server exposes the following endpoints:
+
+#### POST `/mcp`
+
+Main MCP endpoint for tool invocations using the Streamable HTTP transport.
+
+**Request Body:** JSON-RPC 2.0 formatted requests
+
+**Response:** JSON-RPC 2.0 formatted responses
+
+#### GET `/health`
+
+Health check endpoint for monitoring server status.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "name": "stock-quotes-server",
+  "version": "1.0.0"
+}
+```
+
+### Command Line Arguments
+
+| Argument | Short | Description | Default |
+|----------|-------|-------------|---------|
+| `--transport` | `-t` | Transport type (stdio or http) | `stdio` |
+| `--http-port` | | HTTP port for HTTP transport | `3000` |
+| `--http-host` | | HTTP host to bind to | `0.0.0.0` |
+| `--help` | `-h` | Show help message | - |
+| `--version` | `-v` | Show version information | - |
+
+### Error Handling
+
+The server uses custom error types for better error handling:
+
+- **NotFoundError**: Thrown when a stock ticker is not found
+- **RateLimitError**: Thrown when API rate limits are exceeded
+- **ValidationError**: Thrown when input validation fails (e.g., invalid date format)
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Issue:** "Port 3000 is already in use"
+
+**Solution:** Either stop the process using port 3000 or specify a different port:
+```bash
+npm run start:http -- --http-port 8080
+```
+
+**Issue:** "Stock ticker not found"
+
+**Solution:** Verify the ticker symbol is correct and try using the `search_stocks` tool to find the correct symbol.
+
+**Issue:** "Date range cannot exceed 5 years"
+
+**Solution:** The `get_historical_data` tool has a 5-year limit. Break your request into smaller date ranges.
+
+**Issue:** Rate limiting errors
+
+**Solution:** The server caches responses for 5 minutes (quotes) and 30 minutes (search). Wait for the cache to expire or use different tickers.
+
+### Debugging
+
+Use the MCP inspector to debug tool interactions:
+
+```bash
+npm run inspect
+```
+
+This will start the server with the MCP inspector UI, allowing you to test tools and inspect requests/responses.
+
+### Logs
+
+The server uses Winston for structured JSON logging. Logs are output to the console with the following levels:
+- `error`: Critical errors that prevent normal operation
+- `warn`: Warning messages for potential issues
+- `info`: General informational messages
+- `debug`: Detailed debugging information
 
 ## 📄 License
 

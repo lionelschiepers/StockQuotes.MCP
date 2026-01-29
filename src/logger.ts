@@ -2,7 +2,11 @@ import winston from 'winston';
 
 const { combine, timestamp, json, colorize, printf } = winston.format;
 
-const consoleFormat = printf(({ level, message, timestamp, ...metadata }) => {
+/**
+ * Custom console format for Winston logger
+ * Formats log messages with timestamp, level, message, and optional metadata
+ */
+export const consoleFormat = printf(({ level, message, timestamp, ...metadata }) => {
   let msg = `${String(timestamp)} [${String(level)}]: ${String(message)}`;
   if (Object.keys(metadata).length > 0) {
     msg += ` ${JSON.stringify(metadata)}`;

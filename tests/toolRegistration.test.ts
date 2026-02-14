@@ -15,6 +15,7 @@ describe('Tool Registration', () => {
     };
     mockStockService = {
       getQuote: jest.fn(),
+      getQuotes: jest.fn(),
       search: jest.fn(),
       getHistoricalData: jest.fn(),
     };
@@ -23,8 +24,9 @@ describe('Tool Registration', () => {
   it('should register all tools', () => {
     registerToolsOnServer(mockServer, mockStockService as StockQuotesService);
 
-    expect(mockServer.registerTool).toHaveBeenCalledTimes(3);
+    expect(mockServer.registerTool).toHaveBeenCalledTimes(4);
     expect(registeredTools['get_stock_quote']).toBeDefined();
+    expect(registeredTools['get_stock_quotes']).toBeDefined();
     expect(registeredTools['search_stocks']).toBeDefined();
     expect(registeredTools['get_historical_data']).toBeDefined();
   });
@@ -59,6 +61,42 @@ describe('Tool Registration', () => {
       mockStockService.getQuote.mockRejectedValue(error);
 
       await expect(handler({ ticker: 'INVALID' })).rejects.toThrow('Ticker not found');
+    });
+  });
+
+  describe('get_stock_quotes handler', () => {
+    it('should call getQuotes and return formatted result', async () => {
+      registerToolsOnServer(mockServer, mockStockService as StockQuotesService);
+      const handler = registeredTools['get_stock_quotes'].handler;
+
+      const mockQuotes = [
+        { symbol: 'AAPL', price: 150 },
+        { symbol: 'MSFT', price: 250 },
+      ];
+      mockStockService.getQuotes.mockResolvedValue(mockQuotes);
+
+      const result = await handler({ tickers: ['AAPL', 'MSFT'] });
+
+      expect(mockStockService.getQuotes).toHaveBeenCalledWith({ tickers: ['AAPL', 'MSFT'] });
+      expect(result).toEqual({
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(mockQuotes, null, 2),
+          },
+        ],
+        structuredContent: { quotes: mockQuotes },
+      });
+    });
+
+    it('should throw error when getQuotes fails', async () => {
+      registerToolsOnServer(mockServer, mockStockService as StockQuotesService);
+      const handler = registeredTools['get_stock_quotes'].handler;
+
+      const error = new Error('Batch fetch failed');
+      mockStockService.getQuotes.mockRejectedValue(error);
+
+      await expect(handler({ tickers: ['INVALID'] })).rejects.toThrow('Batch fetch failed');
     });
   });
 

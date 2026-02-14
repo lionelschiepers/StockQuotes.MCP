@@ -9,12 +9,12 @@ type ChartModuleOptions = Parameters<InstanceType<typeof YahooFinance>['chart']>
 
 export interface YahooClient {
   /**
-   * Fetch stock quote(s) for a given symbol
-   * @param symbol - Ticker symbol
+   * Fetch stock quote(s) for a given symbol or symbols
+   * @param symbol - Ticker symbol or array of symbols
    * @param options - Quote options
    * @returns Promise<YahooQuote | YahooQuote[]> - Quote data
    */
-  quote(symbol: string, options?: QuoteOptions): Promise<YahooQuote | YahooQuote[]>;
+  quote(symbol: string | string[], options?: QuoteOptions): Promise<YahooQuote | YahooQuote[]>;
 
   /**
    * Search for stocks/companies
@@ -55,14 +55,16 @@ export class YahooFinanceClient implements YahooClient {
   }
 
   /**
-   * Fetch stock quote(s) for a given symbol
-   * @param symbol - Ticker symbol
+   * Fetch stock quote(s) for a given symbol or symbols
+   * @param symbol - Ticker symbol or array of symbols
    * @param options - Quote options
    * @returns Promise<YahooQuote | YahooQuote[]> - Quote data
    */
-  async quote(symbol: string, options?: QuoteOptions): Promise<YahooQuote | YahooQuote[]> {
-    const result = await this.client.quote(symbol, options);
-    return result as YahooQuote | YahooQuote[];
+  async quote(
+    symbol: string | string[],
+    options?: QuoteOptions
+  ): Promise<YahooQuote | YahooQuote[]> {
+    return (await this.client.quote(symbol, options)) as YahooQuote | YahooQuote[];
   }
 
   /**

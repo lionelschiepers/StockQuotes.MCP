@@ -11,6 +11,22 @@ export const StockQuoteSchema = z.object({
   fields: z.array(z.string()).optional().describe('Optional list of specific fields to return'),
 });
 
+// Schema for multiple stock quotes tool input
+export const StockQuotesSchema = z.object({
+  tickers: z
+    .array(
+      z
+        .string()
+        .min(1)
+        .max(10)
+        .toUpperCase()
+        .describe('Stock ticker symbol (e.g., AAPL, GOOGL, MSFT)')
+    )
+    .min(1)
+    .describe('List of stock ticker symbols'),
+  fields: z.array(z.string()).optional().describe('Optional list of specific fields to return'),
+});
+
 // Schema for stock search tool input
 export const StockSearchSchema = z.object({
   query: z.string().min(1).describe('Search query (company name or ticker)'),
@@ -31,6 +47,7 @@ export const HistoricalDataSchema = z.object({
 
 // Type for stock quote tool input
 export type StockQuoteInput = z.infer<typeof StockQuoteSchema>;
+export type StockQuotesInput = z.infer<typeof StockQuotesSchema>;
 export type StockSearchInput = z.infer<typeof StockSearchSchema>;
 export type HistoricalDataInput = z.infer<typeof HistoricalDataSchema>;
 

@@ -14,8 +14,10 @@ import type {
   HistoricalData,
   StockQuoteInput,
   StockQuoteResponse,
+  StockQuotesInput,
   StockSearchResult,
   YahooChartResponse,
+  YahooQuote,
   YahooSearchQuote,
   YahooSearchResponse,
 } from './types.js';
@@ -68,35 +70,7 @@ export class StockQuotesService {
         throw new NotFoundError(`Stock ticker '${ticker}' not found`);
       }
 
-      const response: StockQuoteResponse = {
-        symbol: quote.symbol ?? ticker,
-        name: quote.shortName ?? quote.longName,
-        exchange: quote.exchange,
-        currency: quote.currency,
-        regularMarketPrice: quote.regularMarketPrice,
-        regularMarketChange: quote.regularMarketChange,
-        regularMarketChangePercent: quote.regularMarketChangePercent,
-        regularMarketVolume: quote.regularMarketVolume,
-        marketCap: quote.marketCap,
-        fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
-        fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
-        averageDailyVolume3Month: quote.averageDailyVolume3Month,
-        trailingPE: quote.trailingPE,
-        forwardPE: quote.forwardPE,
-        dividendYield: quote.dividendYield,
-        epsTrailingTwelveMonths: quote.epsTrailingTwelveMonths,
-        epsForward: quote.epsForward,
-        bookValue: quote.bookValue,
-        priceToBook: quote.priceToBook,
-        marketState: quote.marketState,
-        quoteType: quote.quoteType,
-      };
-
-      Object.keys(response).forEach(
-        (key) =>
-          response[key as keyof StockQuoteResponse] === undefined &&
-          delete response[key as keyof StockQuoteResponse]
-      );
+      const response = this.mapToStockQuoteResponse(quote, ticker);
 
       this.cache.set(cacheKey, response);
       return response;
@@ -111,6 +85,89 @@ export class StockQuotesService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Fetch multiple stock quotes for the given ticker symbols
+   * @param input - The stock quotes input containing the tickers and optional fields
+   * @returns Promise<StockQuoteResponse[]> - The stock quote data for each ticker
+   */
+  async getQuotes(input: StockQuotesInput): Promise<StockQuoteResponse[]> {
+    const { tickers, fields } = input;
+    const cacheKey = `quotes_${tickers.sort().join(',')}_${fields?.join(',') ?? 'all'}`;
+
+    const cachedResponse = this.cache.get<StockQuoteResponse[]>(cacheKey);
+    if (cachedResponse) {
+      logger.debug('Cache hit for multiple stock quotes', { tickers, cacheKey });
+      return cachedResponse;
+    }
+
+    try {
+      const validFields = fields ? fields.filter((field: string) => field.length > 0) : undefined;
+      const options = validFields ? { fields: validFields } : undefined;
+
+      const results = await this.yahooClient.quote(tickers, options);
+
+      if (!results) {
+        throw new NotFoundError(`Stock tickers not found: ${tickers.join(', ')}`);
+      }
+
+      const quotes = Array.isArray(results) ? results : [results];
+
+      const responses = quotes.map((quote) =>
+        this.mapToStockQuoteResponse(quote, quote.symbol ?? 'unknown')
+      );
+
+      this.cache.set(cacheKey, responses);
+      return responses;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('rate limit')) {
+          throw new RateLimitError();
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Maps a YahooQuote to a StockQuoteResponse
+   * @param quote - YahooQuote object
+   * @param ticker - Ticker symbol
+   * @returns StockQuoteResponse
+   */
+  private mapToStockQuoteResponse(quote: YahooQuote, ticker: string): StockQuoteResponse {
+    const response: StockQuoteResponse = {
+      symbol: quote.symbol ?? ticker,
+      name: quote.shortName ?? quote.longName,
+      exchange: quote.exchange,
+      currency: quote.currency,
+      regularMarketPrice: quote.regularMarketPrice,
+      regularMarketChange: quote.regularMarketChange,
+      regularMarketChangePercent: quote.regularMarketChangePercent,
+      regularMarketVolume: quote.regularMarketVolume,
+      marketCap: quote.marketCap,
+      fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
+      fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
+      averageDailyVolume3Month: quote.averageDailyVolume3Month,
+      trailingPE: quote.trailingPE,
+      forwardPE: quote.forwardPE,
+      dividendYield: quote.dividendYield,
+      epsTrailingTwelveMonths: quote.epsTrailingTwelveMonths,
+      epsForward: quote.epsForward,
+      bookValue: quote.bookValue,
+      priceToBook: quote.priceToBook,
+      marketState: quote.marketState,
+      quoteType: quote.quoteType,
+    };
+
+    Object.keys(response).forEach(
+      (key) =>
+        response[key as keyof StockQuoteResponse] === undefined &&
+        delete response[key as keyof StockQuoteResponse]
+    );
+
+    return response;
   }
 
   /**
@@ -227,9 +284,9 @@ export class StockQuotesService {
         if (quote.date && quote.close && quote.high && quote.low && quote.volume) {
           historicalData.push({
             date: format(new Date(quote.date), 'yyyy-MM-dd'),
-            close: quote.close,
-            high: quote.high,
-            low: quote.low,
+            close: Math.round(quote.close * 100) / 100,
+            high: Math.round(quote.high * 100) / 100,
+            low: Math.round(quote.low * 100) / 100,
             volume: quote.volume,
           });
         }

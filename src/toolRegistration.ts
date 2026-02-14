@@ -1,7 +1,12 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { logger } from './logger.js';
 import type { StockQuotesService } from './stockQuotesService.js';
-import { HistoricalDataSchema, StockQuoteSchema, StockSearchSchema } from './types.js';
+import {
+  HistoricalDataSchema,
+  StockQuoteSchema,
+  StockQuotesSchema,
+  StockSearchSchema,
+} from './types.js';
 
 /**
  * Register all MCP tools on a server instance
@@ -31,6 +36,32 @@ export function registerToolsOnServer(server: McpServer, stockService: StockQuot
           },
         ],
         structuredContent: quote,
+      };
+    }
+  );
+
+  server.registerTool(
+    'get_stock_quotes',
+    {
+      title: 'Get Multiple Stock Quotes',
+      description:
+        'Fetch current stock quote data from Yahoo Finance for multiple ticker symbols in a single request. ' +
+        'Returns price, volume, market cap, and other key metrics for each ticker. ' +
+        'Supports stocks, ETFs, cryptocurrencies, and other financial instruments.',
+      inputSchema: StockQuotesSchema,
+    },
+    async ({ tickers, fields }) => {
+      logger.info('Fetching multiple stock quotes', { tickers, fields });
+      const quotes = await stockService.getQuotes({ tickers, fields });
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(quotes, null, 2),
+          },
+        ],
+        structuredContent: { quotes },
       };
     }
   );

@@ -176,6 +176,65 @@ describe('StockQuotesService', () => {
     });
   });
 
+  describe('getQuotes', () => {
+    it('should fetch multiple stock quotes in one call', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockQuotesResult: any[] = [
+        {
+          symbol: 'AAPL',
+          shortName: 'Apple Inc.',
+          regularMarketPrice: 170.0,
+        },
+        {
+          symbol: 'MSFT',
+          shortName: 'Microsoft Corporation',
+          regularMarketPrice: 250.0,
+        },
+      ];
+      mockQuote.mockResolvedValue(mockQuotesResult);
+
+      const tickers = ['AAPL', 'MSFT'];
+      const quotes = await service.getQuotes({ tickers });
+
+      expect(quotes).toHaveLength(2);
+      expect(quotes[0].symbol).toBe('AAPL');
+      expect(quotes[1].symbol).toBe('MSFT');
+      expect(mockQuote).toHaveBeenCalledWith(tickers, undefined);
+    });
+
+    it('should handle single result from yahoo-finance2.quote for getQuotes', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockQuoteResult: any = {
+        symbol: 'AAPL',
+        shortName: 'Apple Inc.',
+        regularMarketPrice: 170.0,
+      };
+      mockQuote.mockResolvedValue(mockQuoteResult);
+
+      const tickers = ['AAPL'];
+      const quotes = await service.getQuotes({ tickers });
+
+      expect(quotes).toHaveLength(1);
+      expect(quotes[0].symbol).toBe('AAPL');
+    });
+
+    it('should throw NotFoundError if no results are returned for getQuotes', async () => {
+      mockQuote.mockResolvedValue(undefined);
+
+      const tickers = ['NONEXISTENT'];
+      await expect(service.getQuotes({ tickers })).rejects.toThrow(
+        'Stock tickers not found: NONEXISTENT'
+      );
+    });
+
+    it('should handle rate limit error for getQuotes', async () => {
+      mockQuote.mockRejectedValue(new Error('Some rate limit error occurred'));
+      await expect(service.getQuotes({ tickers: ['AAPL'] })).rejects.toThrow(
+        'Rate limit exceeded. Please try again later'
+      );
+    });
+  });
+
   describe('getMultipleQuotes', () => {
     it('should fetch multiple stock quotes and handle errors gracefully', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -405,6 +464,37 @@ describe('StockQuotesService', () => {
       const historicalData = await service.getHistoricalData(ticker, fromDate, toDate);
 
       expect(historicalData).toEqual([]);
+    });
+
+    it('should round close, high, and low prices to 2 decimals', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockChartResult: any = {
+        quotes: [
+          {
+            date: new Date('2023-01-01'),
+            close: 100.1234,
+            high: 105.5678,
+            low: 95.9012,
+            volume: 1000000,
+          },
+        ],
+      };
+
+      mockChart.mockResolvedValue(mockChartResult);
+
+      const ticker = 'AAPL';
+      const fromDate = '2023-01-01';
+      const toDate = '2023-01-01';
+
+      const historicalData = await service.getHistoricalData(ticker, fromDate, toDate);
+
+      expect(historicalData[0]).toEqual({
+        date: '2023-01-01',
+        close: 100.12,
+        high: 105.57,
+        low: 95.90,
+        volume: 1000000,
+      });
     });
   });
 });

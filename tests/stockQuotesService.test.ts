@@ -174,6 +174,27 @@ describe('StockQuotesService', () => {
 
       expect(mockQuote).toHaveBeenCalledWith('AAPL', { fields: ['field1', 'field2'] });
     });
+
+    it('should filter returned fields in getQuote', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockQuoteResult: any = {
+        symbol: 'AAPL',
+        shortName: 'Apple Inc.',
+        regularMarketPrice: 170.0,
+        exchange: 'NASDAQ',
+      };
+      mockQuote.mockResolvedValue(mockQuoteResult);
+
+      const ticker = 'AAPL';
+      const quote = await service.getQuote({ ticker, fields: ['name'] });
+
+      expect(quote).toEqual({
+        symbol: 'AAPL',
+        name: 'Apple Inc.',
+      });
+      expect(quote).not.toHaveProperty('regularMarketPrice');
+      expect(quote).not.toHaveProperty('exchange');
+    });
   });
 
   describe('getQuotes', () => {
@@ -216,6 +237,37 @@ describe('StockQuotesService', () => {
 
       expect(quotes).toHaveLength(1);
       expect(quotes[0].symbol).toBe('AAPL');
+    });
+
+    it('should filter returned fields in getQuotes', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockQuotesResult: any[] = [
+        {
+          symbol: 'AAPL',
+          shortName: 'Apple Inc.',
+          regularMarketPrice: 170.0,
+        },
+        {
+          symbol: 'MSFT',
+          shortName: 'Microsoft Corporation',
+          regularMarketPrice: 250.0,
+        },
+      ];
+      mockQuote.mockResolvedValue(mockQuotesResult);
+
+      const tickers = ['AAPL', 'MSFT'];
+      const quotes = await service.getQuotes({ tickers, fields: ['name'] });
+
+      expect(quotes).toHaveLength(2);
+      expect(quotes[0]).toEqual({
+        symbol: 'AAPL',
+        name: 'Apple Inc.',
+      });
+      expect(quotes[1]).toEqual({
+        symbol: 'MSFT',
+        name: 'Microsoft Corporation',
+      });
+      expect(quotes[0]).not.toHaveProperty('regularMarketPrice');
     });
 
     it('should throw NotFoundError if no results are returned for getQuotes', async () => {

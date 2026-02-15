@@ -70,7 +70,7 @@ export class StockQuotesService {
         throw new NotFoundError(`Stock ticker '${ticker}' not found`);
       }
 
-      const response = this.mapToStockQuoteResponse(quote, ticker);
+      const response = this.mapToStockQuoteResponse(quote, ticker, fields);
 
       this.cache.set(cacheKey, response);
       return response;
@@ -115,7 +115,7 @@ export class StockQuotesService {
       const quotes = Array.isArray(results) ? results : [results];
 
       const responses = quotes.map((quote) =>
-        this.mapToStockQuoteResponse(quote, quote.symbol ?? 'unknown')
+        this.mapToStockQuoteResponse(quote, quote.symbol ?? 'unknown', fields)
       );
 
       this.cache.set(cacheKey, responses);
@@ -153,10 +153,15 @@ export class StockQuotesService {
    * Maps a YahooQuote to a StockQuoteResponse
    * @param quote - YahooQuote object
    * @param ticker - Ticker symbol
+   * @param requestedFields - Optional list of fields requested by the client
    * @returns StockQuoteResponse
    */
-  private mapToStockQuoteResponse(quote: YahooQuote, ticker: string): StockQuoteResponse {
-    const response: StockQuoteResponse = {
+  private mapToStockQuoteResponse(
+    quote: YahooQuote,
+    ticker: string,
+    requestedFields?: string[]
+  ): StockQuoteResponse {
+    const fullResponse: StockQuoteResponse = {
       symbol: quote.symbol ?? ticker,
       name: quote.shortName ?? quote.longName,
       exchange: quote.exchange,
@@ -180,13 +185,29 @@ export class StockQuotesService {
       quoteType: quote.quoteType,
     };
 
-    Object.keys(response).forEach(
+    // Filter out undefined values
+    Object.keys(fullResponse).forEach(
       (key) =>
-        response[key as keyof StockQuoteResponse] === undefined &&
-        delete response[key as keyof StockQuoteResponse]
+        fullResponse[key as keyof StockQuoteResponse] === undefined &&
+        delete fullResponse[key as keyof StockQuoteResponse]
     );
 
-    return response;
+    if (!requestedFields || requestedFields.length === 0) {
+      return fullResponse;
+    }
+
+    // Filter by requested fields
+    const filteredResponse: StockQuoteResponse = {
+      symbol: fullResponse.symbol, // Always include symbol
+    };
+
+    requestedFields.forEach((field) => {
+      if (field in fullResponse) {
+        filteredResponse[field] = fullResponse[field];
+      }
+    });
+
+    return filteredResponse;
   }
 
   /**

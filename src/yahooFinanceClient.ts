@@ -45,6 +45,7 @@ export interface YahooClient {
 
 export class YahooFinanceClient implements YahooClient {
   private readonly client: InstanceType<typeof YahooFinance>;
+  private static queue: Promise<void> = Promise.resolve();
 
   /**
    * Create a new YahooFinanceClient
@@ -52,6 +53,25 @@ export class YahooFinanceClient implements YahooClient {
    */
   constructor(client?: InstanceType<typeof YahooFinance>) {
     this.client = client ?? new YahooFinance();
+  }
+
+  /**
+   * Enqueues a task to be executed sequentially.
+   * Ensures only one Yahoo Finance call is active at a time across all instances.
+   */
+  private async enqueue<T>(task: () => Promise<T>): Promise<T> {
+    const previous = YahooFinanceClient.queue;
+    let resolveNext: () => void;
+    YahooFinanceClient.queue = new Promise<void>((resolve) => {
+      resolveNext = resolve;
+    });
+
+    try {
+      await previous;
+      return await task();
+    } finally {
+      resolveNext!();
+    }
   }
 
   /**
@@ -64,7 +84,9 @@ export class YahooFinanceClient implements YahooClient {
     symbol: string | string[],
     options?: QuoteOptions
   ): Promise<YahooQuote | YahooQuote[]> {
-    return (await this.client.quote(symbol, options)) as YahooQuote | YahooQuote[];
+    return this.enqueue(
+      async () => (await this.client.quote(symbol, options)) as YahooQuote | YahooQuote[]
+    );
   }
 
   /**
@@ -79,8 +101,10 @@ export class YahooFinanceClient implements YahooClient {
     options?: SearchOptions,
     moduleOptions?: SearchModuleOptions
   ): Promise<YahooSearchResponse> {
-    const result = await this.client.search(query, options, moduleOptions);
-    return result as YahooSearchResponse;
+    return this.enqueue(async () => {
+      const result = await this.client.search(query, options, moduleOptions);
+      return result as YahooSearchResponse;
+    });
   }
 
   /**
@@ -95,7 +119,9 @@ export class YahooFinanceClient implements YahooClient {
     options: ChartOptions,
     moduleOptions?: ChartModuleOptions
   ): Promise<YahooChartResponse> {
-    const result = await this.client.chart(symbol, options, moduleOptions);
-    return result as YahooChartResponse;
+    return this.enqueue(async () => {
+      const result = await this.client.chart(symbol, options, moduleOptions);
+      return result as YahooChartResponse;
+    });
   }
 }

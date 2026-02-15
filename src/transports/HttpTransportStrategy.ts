@@ -92,8 +92,8 @@ export class HttpTransportStrategy implements TransportStrategy {
 
     // Apply rate limiting to all routes
     const limiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100, // limit each IP to 100 requests per windowMs
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 120, // limit each IP to 120 requests per windowMs
       standardHeaders: true,
       legacyHeaders: false,
       message: {

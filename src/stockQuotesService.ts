@@ -55,7 +55,7 @@ export class StockQuotesService {
     }
 
     try {
-      const validFields = fields ? fields.filter((field: string) => field.length > 0) : undefined;
+      const validFields = this.prepareFields(fields);
       const options = validFields ? { fields: validFields } : undefined;
 
       const result = await this.yahooClient.quote(ticker, options);
@@ -103,7 +103,7 @@ export class StockQuotesService {
     }
 
     try {
-      const validFields = fields ? fields.filter((field: string) => field.length > 0) : undefined;
+      const validFields = this.prepareFields(fields);
       const options = validFields ? { fields: validFields } : undefined;
 
       const results = await this.yahooClient.quote(tickers, options);
@@ -128,6 +128,25 @@ export class StockQuotesService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Prepares and transforms field requests for Yahoo Finance
+   * @param fields - Optional list of fields requested by the client
+   * @returns string[] | undefined - Transformed fields for Yahoo Finance
+   */
+  private prepareFields(fields?: string[]): string[] | undefined {
+    if (!fields) return undefined;
+
+    let validFields = fields.filter((field) => field.length > 0);
+
+    if (validFields.includes('name')) {
+      validFields = validFields.filter((f) => f !== 'name');
+      if (!validFields.includes('shortName')) validFields.push('shortName');
+      if (!validFields.includes('longName')) validFields.push('longName');
+    }
+
+    return validFields.length > 0 ? validFields : undefined;
   }
 
   /**

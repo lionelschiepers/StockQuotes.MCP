@@ -80,6 +80,30 @@ export interface StockQuoteResponse {
   priceToBook?: number;
   marketState?: string;
   quoteType?: string;
+  regularMarketTime?: Date | number;
+  displayName?: string;
+  regularMarketOpen?: number;
+  regularMarketDayHigh?: number;
+  regularMarketDayLow?: number;
+  regularMarketPreviousClose?: number;
+  bid?: number;
+  ask?: number;
+  bidSize?: number;
+  askSize?: number;
+  fullExchangeName?: string;
+  financialCurrency?: string;
+  fiftyDayAverage?: number;
+  twoHundredDayAverage?: number;
+  sharesOutstanding?: number;
+  averageDailyVolume10Day?: number;
+  fiftyTwoWeekLowChange?: number;
+  fiftyTwoWeekLowChangePercent?: number;
+  fiftyTwoWeekHighChange?: number;
+  fiftyTwoWeekHighChangePercent?: number;
+  fiftyTwoWeekChangePercent?: number;
+  earningsTimestamp?: number;
+  trailingAnnualDividendRate?: number;
+  trailingAnnualDividendYield?: number;
   [key: string]: unknown;
 }
 
@@ -136,6 +160,30 @@ export interface YahooQuote {
   priceToBook?: number;
   marketState?: string;
   quoteType?: string;
+  regularMarketTime?: Date | number;
+  displayName?: string;
+  regularMarketOpen?: number;
+  regularMarketDayHigh?: number;
+  regularMarketDayLow?: number;
+  regularMarketPreviousClose?: number;
+  bid?: number;
+  ask?: number;
+  bidSize?: number;
+  askSize?: number;
+  fullExchangeName?: string;
+  financialCurrency?: string;
+  fiftyDayAverage?: number;
+  twoHundredDayAverage?: number;
+  sharesOutstanding?: number;
+  averageDailyVolume10Day?: number;
+  fiftyTwoWeekLowChange?: number;
+  fiftyTwoWeekLowChangePercent?: number;
+  fiftyTwoWeekHighChange?: number;
+  fiftyTwoWeekHighChangePercent?: number;
+  fiftyTwoWeekChangePercent?: number;
+  earningsTimestamp?: number;
+  trailingAnnualDividendRate?: number;
+  trailingAnnualDividendYield?: number;
   [key: string]: unknown;
 }
 

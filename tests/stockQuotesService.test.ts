@@ -74,6 +74,12 @@ describe('StockQuotesService', () => {
         priceToBook: 17.0,
         marketState: 'REGULAR',
         quoteType: 'EQUITY',
+        regularMarketTime: new Date('2023-01-01T10:00:00Z'),
+        displayName: 'Apple',
+        regularMarketOpen: 168.0,
+        regularMarketDayHigh: 172.0,
+        regularMarketDayLow: 167.0,
+        regularMarketPreviousClose: 169.0,
       };
       mockQuote.mockResolvedValue(mockQuoteResult);
 
@@ -102,6 +108,12 @@ describe('StockQuotesService', () => {
         priceToBook: 17.0,
         marketState: 'REGULAR',
         quoteType: 'EQUITY',
+        regularMarketTime: new Date('2023-01-01T10:00:00Z'),
+        displayName: 'Apple',
+        regularMarketOpen: 168.0,
+        regularMarketDayHigh: 172.0,
+        regularMarketDayLow: 167.0,
+        regularMarketPreviousClose: 169.0,
       });
       expect(mockQuote).toHaveBeenCalledWith(ticker, undefined);
     });

@@ -279,12 +279,14 @@ export class StockQuotesService {
    * @param ticker - Stock ticker symbol (e.g., AAPL)
    * @param fromDate - Start date in 'YYYY-MM-DD' format
    * @param toDate - End date in 'YYYY-MM-DD' format
-   * @returns Promise<HistoricalData[]> - An array of historical data points (date, close, high, low, volume).
+   * @param fields - Optional list of specific fields to return
+   * @returns Promise<HistoricalData[]> - An array of historical data points.
    */
   async getHistoricalData(
     ticker: string,
     fromDate: string,
-    toDate: string
+    toDate: string,
+    fields?: string[]
   ): Promise<HistoricalData[]> {
     const fromDateObj = parseISO(fromDate);
     const toDateObj = parseISO(toDate);
@@ -321,14 +323,35 @@ export class StockQuotesService {
 
       const quotes = chart.quotes ?? [];
       for (const quote of quotes) {
-        if (quote.date && quote.close && quote.high && quote.low && quote.volume) {
-          historicalData.push({
+        if (quote.date) {
+          const dataPoint: HistoricalData = {
             date: format(new Date(quote.date), 'yyyy-MM-dd'),
-            close: Math.round(quote.close * 100) / 100,
-            high: Math.round(quote.high * 100) / 100,
-            low: Math.round(quote.low * 100) / 100,
-            volume: quote.volume,
-          });
+            close: quote.close !== undefined ? Math.round(quote.close * 100) / 100 : 0,
+            high: quote.high !== undefined ? Math.round(quote.high * 100) / 100 : 0,
+            low: quote.low !== undefined ? Math.round(quote.low * 100) / 100 : 0,
+            volume: quote.volume ?? 0,
+          };
+
+          if (!fields || fields.length === 0) {
+            // If all required fields are present in the original quote, add to results
+            if (
+              quote.close !== undefined &&
+              quote.high !== undefined &&
+              quote.low !== undefined &&
+              quote.volume !== undefined
+            ) {
+              historicalData.push(dataPoint);
+            }
+          } else {
+            // Filter by requested fields, always include date
+            const filteredPoint: Record<string, unknown> = { date: dataPoint.date };
+            fields.forEach((field) => {
+              if (field in dataPoint && dataPoint[field as keyof HistoricalData] !== undefined) {
+                filteredPoint[field] = dataPoint[field as keyof HistoricalData];
+              }
+            });
+            historicalData.push(filteredPoint as unknown as HistoricalData);
+          }
         }
       }
 

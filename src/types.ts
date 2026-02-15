@@ -43,6 +43,7 @@ export const HistoricalDataSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .describe('End date in YYYY-MM-DD format'),
+  fields: z.array(z.string()).optional().describe('Optional list of specific fields to return'),
 });
 
 // Type for stock quote tool input

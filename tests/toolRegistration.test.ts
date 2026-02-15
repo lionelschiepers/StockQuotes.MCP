@@ -147,7 +147,40 @@ describe('Tool Registration', () => {
       expect(mockStockService.getHistoricalData).toHaveBeenCalledWith(
         'AAPL',
         '2023-01-01',
-        '2023-01-10'
+        '2023-01-10',
+        undefined
+      );
+      expect(result).toEqual({
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({ closingPrices: mockData }, null, 2),
+          },
+        ],
+        structuredContent: { closingPrices: mockData },
+      });
+    });
+
+    it('should call getHistoricalData with fields and return formatted result', async () => {
+      registerToolsOnServer(mockServer, mockStockService as StockQuotesService);
+      const handler = registeredTools['get_historical_data'].handler;
+
+      const mockData = [{ date: '2023-01-01', close: 100 }];
+      mockStockService.getHistoricalData.mockResolvedValue(mockData);
+
+      const params = {
+        ticker: 'AAPL',
+        fromDate: '2023-01-01',
+        toDate: '2023-01-10',
+        fields: ['close'],
+      };
+      const result = await handler(params);
+
+      expect(mockStockService.getHistoricalData).toHaveBeenCalledWith(
+        'AAPL',
+        '2023-01-01',
+        '2023-01-10',
+        ['close']
       );
       expect(result).toEqual({
         content: [

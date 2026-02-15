@@ -548,5 +548,36 @@ describe('StockQuotesService', () => {
         volume: 1000000,
       });
     });
+
+    it('should filter fields in historical data', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockChartResult: any = {
+        quotes: [
+          {
+            date: new Date('2023-01-01'),
+            close: 100,
+            high: 105,
+            low: 95,
+            volume: 1000000,
+          },
+        ],
+      };
+
+      mockChart.mockResolvedValue(mockChartResult);
+
+      const ticker = 'AAPL';
+      const fromDate = '2023-01-01';
+      const toDate = '2023-01-01';
+
+      const historicalData = await service.getHistoricalData(ticker, fromDate, toDate, ['close']);
+
+      expect(historicalData[0]).toEqual({
+        date: '2023-01-01',
+        close: 100,
+      });
+      expect(historicalData[0]).not.toHaveProperty('high');
+      expect(historicalData[0]).not.toHaveProperty('low');
+      expect(historicalData[0]).not.toHaveProperty('volume');
+    });
   });
 });

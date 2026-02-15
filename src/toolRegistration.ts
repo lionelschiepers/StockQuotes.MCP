@@ -99,9 +99,9 @@ export function registerToolsOnServer(server: McpServer, stockService: StockQuot
         'Fetch historical stock data for a given ticker, from a start date to an end date. Returns an array of closing prices for each day.',
       inputSchema: HistoricalDataSchema,
     },
-    async ({ ticker, fromDate, toDate }) => {
-      logger.info('Fetching historical data', { ticker, fromDate, toDate });
-      const closingPrices = await stockService.getHistoricalData(ticker, fromDate, toDate);
+    async ({ ticker, fromDate, toDate, fields }) => {
+      logger.info('Fetching historical data', { ticker, fromDate, toDate, fields });
+      const closingPrices = await stockService.getHistoricalData(ticker, fromDate, toDate, fields);
       return {
         content: [
           {

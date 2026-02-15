@@ -94,7 +94,8 @@ export class StockQuotesService {
    */
   async getQuotes(input: StockQuotesInput): Promise<StockQuoteResponse[]> {
     const { tickers, fields } = input;
-    const cacheKey = `quotes_${tickers.sort().join(',')}_${fields?.join(',') ?? 'all'}`;
+    const sortedTickers = [...tickers].sort((a, b) => a.localeCompare(b));
+    const cacheKey = `quotes_${sortedTickers.join(',')}_${fields?.join(',') ?? 'all'}`;
 
     const cachedResponse = this.cache.get<StockQuoteResponse[]>(cacheKey);
     if (cachedResponse) {
@@ -275,6 +276,52 @@ export class StockQuotesService {
   }
 
   /**
+   * Maps Yahoo chart quotes to historical data points
+   * @param chart - YahooChartResponse
+   * @param fields - Optional list of fields to return
+   * @returns HistoricalData[]
+   */
+  private mapToHistoricalData(chart: YahooChartResponse, fields?: string[]): HistoricalData[] {
+    const historicalData: HistoricalData[] = [];
+    const quotes = chart.quotes ?? [];
+
+    for (const quote of quotes) {
+      if (!quote.date) continue;
+
+      const dataPoint: HistoricalData = {
+        date: format(new Date(quote.date), 'yyyy-MM-dd'),
+        close: quote.close === undefined ? 0 : Math.round(quote.close * 100) / 100,
+        high: quote.high === undefined ? 0 : Math.round(quote.high * 100) / 100,
+        low: quote.low === undefined ? 0 : Math.round(quote.low * 100) / 100,
+        volume: quote.volume ?? 0,
+      };
+
+      if (fields && fields.length > 0) {
+        // Filter by requested fields, always include date
+        const filteredPoint: Record<string, unknown> = { date: dataPoint.date };
+        fields.forEach((field) => {
+          if (field in dataPoint && dataPoint[field as keyof HistoricalData] !== undefined) {
+            filteredPoint[field] = dataPoint[field as keyof HistoricalData];
+          }
+        });
+        historicalData.push(filteredPoint as unknown as HistoricalData);
+      } else {
+        // If all required fields are present in the original quote, add to results
+        if (
+          quote.close !== undefined &&
+          quote.high !== undefined &&
+          quote.low !== undefined &&
+          quote.volume !== undefined
+        ) {
+          historicalData.push(dataPoint);
+        }
+      }
+    }
+
+    return historicalData;
+  }
+
+  /**
    * Fetches historical stock data for a given ticker, from a start date to an end date.
    * @param ticker - Stock ticker symbol (e.g., AAPL)
    * @param fromDate - Start date in 'YYYY-MM-DD' format
@@ -288,6 +335,37 @@ export class StockQuotesService {
     toDate: string,
     fields?: string[]
   ): Promise<HistoricalData[]> {
+    this.validateHistoricalDataDates(fromDate, toDate);
+
+    try {
+      const toDateObj = parseISO(toDate);
+      // Yahoo Finance treats period2 as exclusive, so we add 1 day to include the end date
+      const period2 = format(addDays(toDateObj, 1), 'yyyy-MM-dd');
+
+      const chart: YahooChartResponse = await this.yahooClient.chart(ticker, {
+        period1: fromDate,
+        period2,
+      });
+
+      return this.mapToHistoricalData(chart, fields);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+
+      logger.error(`Error fetching historical data for ${ticker}`, { ticker, error });
+      throw new NotFoundError(
+        `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
+      );
+    }
+  }
+
+  /**
+   * Validates the date range for historical data
+   * @param fromDate - Start date
+   * @param toDate - End date
+   */
+  private validateHistoricalDataDates(fromDate: string, toDate: string): void {
     const fromDateObj = parseISO(fromDate);
     const toDateObj = parseISO(toDate);
     const today = startOfToday();
@@ -309,62 +387,6 @@ export class StockQuotesService {
 
     if (differenceInYears(toDateObj, fromDateObj) > 5) {
       throw new ValidationError('Date range cannot exceed 5 years.');
-    }
-
-    try {
-      // Yahoo Finance treats period2 as exclusive, so we add 1 day to include the end date
-      const period2 = format(addDays(toDateObj, 1), 'yyyy-MM-dd');
-
-      const chart: YahooChartResponse = await this.yahooClient.chart(ticker, {
-        period1: fromDate,
-        period2,
-      });
-      const historicalData: HistoricalData[] = [];
-
-      const quotes = chart.quotes ?? [];
-      for (const quote of quotes) {
-        if (quote.date) {
-          const dataPoint: HistoricalData = {
-            date: format(new Date(quote.date), 'yyyy-MM-dd'),
-            close: quote.close !== undefined ? Math.round(quote.close * 100) / 100 : 0,
-            high: quote.high !== undefined ? Math.round(quote.high * 100) / 100 : 0,
-            low: quote.low !== undefined ? Math.round(quote.low * 100) / 100 : 0,
-            volume: quote.volume ?? 0,
-          };
-
-          if (!fields || fields.length === 0) {
-            // If all required fields are present in the original quote, add to results
-            if (
-              quote.close !== undefined &&
-              quote.high !== undefined &&
-              quote.low !== undefined &&
-              quote.volume !== undefined
-            ) {
-              historicalData.push(dataPoint);
-            }
-          } else {
-            // Filter by requested fields, always include date
-            const filteredPoint: Record<string, unknown> = { date: dataPoint.date };
-            fields.forEach((field) => {
-              if (field in dataPoint && dataPoint[field as keyof HistoricalData] !== undefined) {
-                filteredPoint[field] = dataPoint[field as keyof HistoricalData];
-              }
-            });
-            historicalData.push(filteredPoint as unknown as HistoricalData);
-          }
-        }
-      }
-
-      return historicalData;
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-
-      logger.error(`Error fetching historical data for ${ticker}`, { ticker, error });
-      throw new NotFoundError(
-        `Could not fetch historical data for ${ticker}. Please check the ticker and date range.`
-      );
     }
   }
 }

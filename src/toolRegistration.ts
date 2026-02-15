@@ -96,7 +96,9 @@ export function registerToolsOnServer(server: McpServer, stockService: StockQuot
     {
       title: 'Get Historical Data for a TICKER',
       description:
-        'Fetch historical stock data for a given ticker, from a start date to an end date. Returns an array of closing prices for each day.',
+        'Fetch historical stock data for a given ticker, from a start date to an end date. ' +
+        'Returns an array of historical data points (date, high, low, close, volume). ' +
+        'The "fields" parameter can be used to filter which data points are returned.',
       inputSchema: HistoricalDataSchema,
     },
     async ({ ticker, fromDate, toDate, fields }) => {

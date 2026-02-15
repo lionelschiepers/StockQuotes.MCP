@@ -438,9 +438,27 @@ describe('StockQuotesService', () => {
       const historicalData = await service.getHistoricalData(ticker, fromDate, toDate);
 
       expect(historicalData).toEqual([
-        { date: '2023-01-01', close: 100, high: 105, low: 95, volume: 1000000 },
-        { date: '2023-01-02', close: 101, high: 106, low: 96, volume: 1200000 },
-        { date: '2023-01-03', close: 102, high: 107, low: 97, volume: 1100000 },
+        {
+          date: '2023-01-01',
+          high: 105,
+          low: 95,
+          close: 100,
+          volume: 1000000,
+        },
+        {
+          date: '2023-01-02',
+          high: 106,
+          low: 96,
+          close: 101,
+          volume: 1200000,
+        },
+        {
+          date: '2023-01-03',
+          high: 107,
+          low: 97,
+          close: 102,
+          volume: 1100000,
+        },
       ]);
       expect(mockChart).toHaveBeenCalledWith(ticker, { period1: fromDate, period2: '2023-01-04' });
     });
@@ -542,9 +560,9 @@ describe('StockQuotesService', () => {
 
       expect(historicalData[0]).toEqual({
         date: '2023-01-01',
-        close: 100.12,
         high: 105.57,
-        low: 95.90,
+        low: 95.9,
+        close: 100.12,
         volume: 1000000,
       });
     });

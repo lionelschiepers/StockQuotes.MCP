@@ -43,7 +43,12 @@ export const HistoricalDataSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .describe('End date in YYYY-MM-DD format'),
-  fields: z.array(z.string()).optional().describe('Optional list of specific fields to return'),
+  fields: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'Optional list of specific fields to return. Valid fields: date, high, low, close, volume'
+    ),
 });
 
 // Type for stock quote tool input
@@ -88,9 +93,9 @@ export interface StockSearchResult {
 // Interface for historical data
 export interface HistoricalData {
   date: string;
-  close: number;
   high: number;
   low: number;
+  close: number;
   volume: number;
 }
 

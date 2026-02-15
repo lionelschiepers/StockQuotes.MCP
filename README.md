@@ -152,9 +152,10 @@ Fetches historical stock data for a specific date range.
   - `ticker` (required): Stock ticker symbol (e.g., AAPL)
   - `fromDate` (required): Start date in YYYY-MM-DD format
   - `toDate` (required): End date in YYYY-MM-DD format
+  - `fields` (optional): Array of specific fields to return (e.g., `["date", "close", "high", "low", "volume"]`)
 - **Constraints:** Date range cannot exceed 5 years
 - **Example Prompt:** "Get AAPL historical data from 2024-01-01 to 2024-01-31."
-- **Returns:** Array of daily data including date, close, high, low, and volume.
+- **Returns:** Array of daily data including date, high, low, close, and volume.
 
 ## 💬 Example Interaction
 

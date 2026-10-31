@@ -286,13 +286,11 @@ export class StockQuotesService {
           typeof quote.exchange === 'string' &&
           (typeof quote.shortname === 'string' || typeof quote.longname === 'string')
       )
-      .map(
-        (result): StockSearchResult => ({
-          symbol: result.symbol,
-          name: result.shortname ?? result.longname ?? '',
-          exchange: result.exchange,
-        })
-      );
+      .map((result): StockSearchResult => ({
+        symbol: result.symbol,
+        name: result.shortname ?? result.longname ?? '',
+        exchange: result.exchange,
+      }));
 
     // Cache search results for 30 minutes
     this.cache.set(cacheKey, searchResults, 1800);
